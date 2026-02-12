@@ -6,6 +6,7 @@ import { showStatus, showSteps, showLogs } from './status.js';
 import { triggerAgent } from './gateway.js';
 import { getDb, getActiveRun, getSteps } from './db.js';
 import { startDashboard, stopDashboard, dashboardStatus } from './server/daemonctl.js';
+import { upgrade, printUpgradeResult } from './upgrade.js';
 
 const args = process.argv.slice(2);
 const cmd = args[0];
@@ -35,6 +36,7 @@ Commands:
   step claim <agent-id>   Claim pending work (used by cron)
   step complete <step-id> Complete a step (reads output from stdin)
   step fail <step-id> "<reason>"
+  upgrade [--db-only] [--force]  Upgrade in-place (preserves database)
   dashboard [stop|status] [--port N]`);
 }
 
@@ -161,6 +163,14 @@ try {
       } else {
         startDashboard(port);
       }
+      break;
+    }
+
+    case 'upgrade': {
+      const dbOnly = args.includes('--db-only');
+      const force = args.includes('--force');
+      const result = upgrade({ dbOnly, force });
+      printUpgradeResult(result);
       break;
     }
 

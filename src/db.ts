@@ -6,6 +6,62 @@ import { homedir } from 'node:os';
 const DB_PATH = join(homedir(), '.openclaw', 'legacy-mod.db');
 let db: DatabaseSync | null = null;
 
+export function getDbPath(): string {
+  return DB_PATH;
+}
+
+interface Migration {
+  version: number;
+  description: string;
+  up: (db: DatabaseSync) => void;
+}
+
+const migrations: Migration[] = [
+  {
+    version: 1,
+    description: 'Baseline schema stamp',
+    up: () => { /* no-op: stamps existing schema as version 1 */ },
+  },
+];
+
+function initSchemaVersion(db: DatabaseSync): void {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS schema_version (
+      version     INTEGER PRIMARY KEY,
+      applied_at  TEXT DEFAULT (datetime('now')),
+      description TEXT
+    )
+  `);
+}
+
+function runMigrations(db: DatabaseSync): void {
+  initSchemaVersion(db);
+  const row = db.prepare('SELECT MAX(version) as v FROM schema_version').get() as { v: number | null } | undefined;
+  const current = row?.v ?? 0;
+  for (const m of migrations) {
+    if (m.version <= current) continue;
+    db.exec('BEGIN');
+    try {
+      m.up(db);
+      db.prepare('INSERT INTO schema_version (version, description) VALUES (?, ?)').run(m.version, m.description);
+      db.exec('COMMIT');
+    } catch (e) {
+      db.exec('ROLLBACK');
+      throw e;
+    }
+  }
+}
+
+export function getSchemaVersion(): number {
+  const d = getDb();
+  const row = d.prepare('SELECT MAX(version) as v FROM schema_version').get() as { v: number | null } | undefined;
+  return row?.v ?? 0;
+}
+
+export function getLatestSchemaVersion(): number {
+  return migrations.length > 0 ? migrations[migrations.length - 1].version : 0;
+}
+
 export function getDb(): DatabaseSync {
   if (db) return db;
   const dir = dirname(DB_PATH);
@@ -13,6 +69,7 @@ export function getDb(): DatabaseSync {
   db = new DatabaseSync(DB_PATH);
   db.exec('PRAGMA journal_mode = WAL');
   initSchema(db);
+  runMigrations(db);
   return db;
 }
 

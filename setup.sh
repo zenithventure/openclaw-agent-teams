@@ -532,6 +532,35 @@ if [[ "${1:-}" == "--link" ]]; then
     exit 0
 fi
 
+# Handle --upgrade (user-facing, full upgrade: filesystem + DB)
+if [[ "${1:-}" == "--upgrade" ]]; then
+    log_step "Upgrading legacy-mod in place..."
+    verify_openclaw
+    provision_workspaces
+    register_agents
+    install_skills
+    inject_guidance
+    copy_shared_files
+    build_orchestrator
+    create_symlink
+    log_step "Running database migration..."
+    node "${SCRIPT_DIR}/dist/cli.js" upgrade --db-only
+    exit 0
+fi
+
+# Handle --upgrade-fs (internal, called by legacy-mod upgrade)
+if [[ "${1:-}" == "--upgrade-fs" ]]; then
+    verify_openclaw
+    provision_workspaces
+    register_agents
+    install_skills
+    inject_guidance
+    copy_shared_files
+    build_orchestrator
+    create_symlink
+    exit 0
+fi
+
 verify_openclaw
 provision_workspaces
 register_agents
