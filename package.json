@@ -1,0 +1,13 @@
+{
+  "name": "legacy-mod",
+  "version": "1.0.0",
+  "description": "Legacy Modernization Orchestrator CLI",
+  "type": "module",
+  "scripts": {
+    "build": "tsc && mkdir -p dist/server && cp src/server/index.html dist/server/index.html"
+  },
+  "devDependencies": {
+    "typescript": "^5.7",
+    "@types/node": "^22"
+  }
+}

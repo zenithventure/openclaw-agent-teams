@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legacy Modernization Dashboard</title>
+<style>
+  :root {
+    --bg-primary: #fafaf9;
+    --bg-card: #ffffff;
+    --bg-secondary: #f5f5f4;
+    --text-primary: #1a1a1a;
+    --text-secondary: #6b7280;
+    --border: #e5e5e5;
+    --accent-learn: #3b82f6;
+    --accent-plan: #f59e0b;
+    --accent-execute: #10b981;
+    --status-done: #10b981;
+    --status-running: #3b82f6;
+    --status-waiting: #9ca3af;
+    --status-failed: #ef4444;
+    --compliance-pass: #10b981;
+    --compliance-fail: #ef4444;
+    --compliance-pending: #9ca3af;
+  }
+  .dark {
+    --bg-primary: #0f0f0f;
+    --bg-card: #1a1a1a;
+    --bg-secondary: #262626;
+    --text-primary: #e5e5e5;
+    --text-secondary: #9ca3af;
+    --border: #333;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+  .header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 24px; border-bottom: 1px solid var(--border);
+    background: var(--bg-card);
+  }
+  .header h1 { font-size: 18px; font-weight: 600; }
+  .header-right { display: flex; gap: 12px; align-items: center; }
+  .customer-badge {
+    background: var(--bg-secondary); padding: 4px 12px;
+    border-radius: 12px; font-size: 13px; color: var(--text-secondary);
+  }
+  .toggle-btn {
+    background: none; border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 10px; cursor: pointer;
+    color: var(--text-secondary); font-size: 13px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+
+  /* Phase Timeline */
+  .phase-timeline {
+    display: flex; gap: 16px; margin-bottom: 24px; align-items: stretch;
+  }
+  .phase-box {
+    flex: 1; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px; text-align: center; position: relative;
+  }
+  .phase-box.active { border-width: 2px; }
+  .phase-box.learn.active { border-color: var(--accent-learn); }
+  .phase-box.plan.active { border-color: var(--accent-plan); }
+  .phase-box.execute.active { border-color: var(--accent-execute); }
+  .phase-box h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .phase-box.learn h3 { color: var(--accent-learn); }
+  .phase-box.plan h3 { color: var(--accent-plan); }
+  .phase-box.execute h3 { color: var(--accent-execute); }
+  .phase-arrow { display: flex; align-items: center; color: var(--text-secondary); font-size: 20px; }
+  .progress-bar { height: 6px; background: var(--bg-secondary); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+  .learn .progress-fill { background: var(--accent-learn); }
+  .plan .progress-fill { background: var(--accent-plan); }
+  .execute .progress-fill { background: var(--accent-execute); }
+  .phase-pct { font-size: 22px; font-weight: 700; }
+
+  /* Section */
+  .section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+  .section h2 { font-size: 15px; font-weight: 600; margin-bottom: 12px; display: flex; justify-content: space-between; }
+
+  /* Step List */
+  .step-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .step-row:last-child { border-bottom: none; }
+  .step-icon { width: 20px; text-align: center; margin-right: 10px; font-size: 14px; }
+  .step-name { flex: 1; }
+  .step-agent { width: 140px; color: var(--text-secondary); }
+  .step-duration { width: 60px; color: var(--text-secondary); text-align: right; }
+  .step-status { width: 80px; text-align: center; font-size: 12px; padding: 2px 8px; border-radius: 10px; }
+  .step-status.done { background: #d1fae5; color: #065f46; }
+  .step-status.running { background: #dbeafe; color: #1e40af; }
+  .step-status.pending { background: #fef3c7; color: #92400e; }
+  .step-status.waiting { background: var(--bg-secondary); color: var(--text-secondary); }
+  .step-status.failed { background: #fee2e2; color: #991b1b; }
+  .dark .step-status.done { background: #064e3b; color: #6ee7b7; }
+  .dark .step-status.running { background: #1e3a5f; color: #93c5fd; }
+  .dark .step-status.pending { background: #78350f; color: #fcd34d; }
+  .dark .step-status.failed { background: #7f1d1d; color: #fca5a5; }
+
+  /* Metrics */
+  .metrics { display: flex; gap: 12px; margin-bottom: 16px; }
+  .metric-card {
+    flex: 1; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px; text-align: center;
+  }
+  .metric-value { font-size: 24px; font-weight: 700; }
+  .metric-label { font-size: 12px; color: var(--text-secondary); }
+
+  /* Module tracker */
+  .module-row { display: flex; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .module-row:last-child { border-bottom: none; }
+  .module-title { flex: 1; }
+  .module-risk { width: 60px; text-align: center; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+  .module-risk.high { color: var(--status-failed); }
+  .module-risk.medium { color: var(--accent-plan); }
+  .module-risk.low { color: var(--status-done); }
+  .module-compliance { width: 160px; font-size: 12px; color: var(--text-secondary); }
+  .module-status { width: 80px; }
+
+  /* Compliance matrix */
+  .compliance-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .compliance-item {
+    padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 500;
+  }
+  .compliance-item.pass { background: #d1fae5; color: #065f46; }
+  .compliance-item.fail { background: #fee2e2; color: #991b1b; }
+  .compliance-item.pending { background: var(--bg-secondary); color: var(--text-secondary); }
+  .dark .compliance-item.pass { background: #064e3b; color: #6ee7b7; }
+  .dark .compliance-item.fail { background: #7f1d1d; color: #fca5a5; }
+
+  /* Activity log */
+  .log-entry { font-size: 13px; padding: 4px 0; color: var(--text-secondary); font-family: monospace; }
+  .log-time { color: var(--text-primary); font-weight: 500; }
+
+  .no-run { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+  .no-run h2 { font-size: 20px; margin-bottom: 8px; color: var(--text-primary); }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Legacy Modernization Dashboard</h1>
+  <div class="header-right">
+    <span class="customer-badge" id="customer"></span>
+    <button class="toggle-btn" onclick="toggleDark()">Dark</button>
+  </div>
+</div>
+<div class="container" id="app">
+  <div class="no-run"><h2>Loading...</h2><p>Connecting to orchestrator</p></div>
+</div>
+<script>
+const API = '';
+let currentRunId = null;
+let darkMode = localStorage.getItem('dark') === '1';
+if (darkMode || (!localStorage.getItem('dark') && matchMedia('(prefers-color-scheme:dark)').matches)) {
+  document.documentElement.classList.add('dark');
+  darkMode = true;
+}
+function toggleDark() {
+  darkMode = !darkMode;
+  document.documentElement.classList.toggle('dark', darkMode);
+  localStorage.setItem('dark', darkMode ? '1' : '0');
+}
+
+function icon(status) {
+  switch(status) {
+    case 'done': return '<span style="color:var(--status-done)">&#10003;</span>';
+    case 'running': return '<span style="color:var(--status-running)">&#9679;</span>';
+    case 'pending': return '<span style="color:var(--accent-plan)">&#9675;</span>';
+    case 'failed': return '<span style="color:var(--status-failed)">&#10007;</span>';
+    default: return '<span style="color:var(--status-waiting)">&#9675;</span>';
+  }
+}
+function dur(sec) {
+  if (!sec) return '—';
+  if (sec < 60) return '<1m';
+  return Math.round(sec/60) + 'm';
+}
+
+async function fetchJson(url) {
+  try { const r = await fetch(API + url); return r.ok ? r.json() : null; } catch { return null; }
+}
+
+async function refresh() {
+  const status = await fetchJson('/api/status');
+  if (!status || status.status === 'no_run') {
+    document.getElementById('app').innerHTML = '<div class="no-run"><h2>No Active Run</h2><p>Start a run with: legacy-mod run "&lt;task&gt;" --repo /path ...</p></div>';
+    document.getElementById('customer').textContent = '';
+    return;
+  }
+  currentRunId = status.run_id;
+  document.getElementById('customer').textContent = status.task ? status.task.slice(0, 40) : '';
+
+  const [steps, modules, events, compliance] = await Promise.all([
+    fetchJson('/api/runs/' + status.run_id + '/steps'),
+    fetchJson('/api/runs/' + status.run_id + '/modules'),
+    fetchJson('/api/runs/' + status.run_id + '/events'),
+    fetchJson('/api/runs/' + status.run_id + '/compliance'),
+  ]);
+
+  // Compute phase progress
+  const phaseSteps = {learn: [], plan: [], execute: []};
+  (steps || []).forEach(s => {
+    const n = s.step_name.toLowerCase();
+    if (n.includes('phase 1') || s.step_id.includes('phase1')) phaseSteps.learn.push(s);
+    else if (n.includes('phase 2') || s.step_id.includes('phase2')) phaseSteps.plan.push(s);
+    else phaseSteps.execute.push(s);
+  });
+  function phasePct(arr) {
+    if (!arr.length) return 0;
+    return Math.round(arr.filter(s => s.status === 'done').length / arr.length * 100);
+  }
+
+  let html = '';
+
+  // Phase timeline
+  const phase = status.phase;
+  html += '<div class="phase-timeline">';
+  html += '<div class="phase-box learn' + (phase==='LEARN'?' active':'') + '">';
+  html += '<h3>Learn</h3><div class="phase-pct">' + phasePct(phaseSteps.learn) + '%</div>';
+  html += '<div class="progress-bar"><div class="progress-fill" style="width:' + phasePct(phaseSteps.learn) + '%"></div></div></div>';
+  html += '<div class="phase-arrow">&#8594;</div>';
+  html += '<div class="phase-box plan' + (phase==='PLAN'?' active':'') + '">';
+  html += '<h3>Plan</h3><div class="phase-pct">' + phasePct(phaseSteps.plan) + '%</div>';
+  html += '<div class="progress-bar"><div class="progress-fill" style="width:' + phasePct(phaseSteps.plan) + '%"></div></div></div>';
+  html += '<div class="phase-arrow">&#8594;</div>';
+  html += '<div class="phase-box execute' + (phase==='EXECUTE'?' active':'') + '">';
+  html += '<h3>Execute</h3><div class="phase-pct">' + phasePct(phaseSteps.execute) + '%</div>';
+  html += '<div class="progress-bar"><div class="progress-fill" style="width:' + phasePct(phaseSteps.execute) + '%"></div></div></div>';
+  html += '</div>';
+
+  // Metrics
+  html += '<div class="metrics">';
+  html += '<div class="metric-card"><div class="metric-value">' + status.steps_completed + '/' + status.steps_total + '</div><div class="metric-label">Steps</div></div>';
+  if (status.modules_total > 0) {
+    html += '<div class="metric-card"><div class="metric-value">' + status.modules_completed + '/' + status.modules_total + '</div><div class="metric-label">Modules</div></div>';
+  }
+  html += '<div class="metric-card"><div class="metric-value">' + status.progress_percent + '%</div><div class="metric-label">Overall</div></div>';
+  if (status.compliance_pass + status.compliance_fail + status.compliance_pending > 0) {
+    html += '<div class="metric-card"><div class="metric-value" style="color:var(--compliance-pass)">' + status.compliance_pass + '</div><div class="metric-label">Compliance Pass</div></div>';
+    html += '<div class="metric-card"><div class="metric-value" style="color:var(--compliance-fail)">' + status.compliance_fail + '</div><div class="metric-label">Compliance Fail</div></div>';
+  }
+  html += '</div>';
+
+  // Steps section
+  html += '<div class="section"><h2>Pipeline Steps <span style="color:var(--text-secondary);font-weight:400;font-size:13px">Phase: ' + phase + ' — ' + status.status + '</span></h2>';
+  (steps || []).forEach(s => {
+    html += '<div class="step-row">';
+    html += '<div class="step-icon">' + icon(s.status) + '</div>';
+    html += '<div class="step-name">' + s.step_name + '</div>';
+    html += '<div class="step-agent">' + s.agent_id.replace('legacy-mod/','') + '</div>';
+    html += '<div class="step-status ' + s.status + '">' + s.status + '</div>';
+    html += '<div class="step-duration">' + dur(s.duration_seconds) + '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // Module tracker (Phase 3)
+  if (modules && modules.length > 0) {
+    const mDone = modules.filter(m => m.status === 'done').length;
+    html += '<div class="section"><h2>Module Migration Tracker <span style="color:var(--text-secondary);font-weight:400;font-size:13px">' + mDone + '/' + modules.length + ' (' + Math.round(mDone/modules.length*100) + '%)</span></h2>';
+    html += '<div class="progress-bar" style="margin-bottom:14px"><div class="progress-fill" style="width:' + Math.round(mDone/modules.length*100) + '%;background:var(--accent-execute)"></div></div>';
+    modules.forEach(m => {
+      html += '<div class="module-row">';
+      html += '<div class="step-icon">' + icon(m.status) + '</div>';
+      html += '<div class="module-title">' + m.title + '</div>';
+      html += '<div class="module-risk ' + (m.risk||'') + '">' + (m.risk||'—') + '</div>';
+      html += '<div class="module-compliance">' + (m.compliance_items||[]).join(', ') + '</div>';
+      html += '<div class="step-status ' + m.status + '">' + m.status + '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  // Compliance matrix
+  if (compliance && Object.keys(compliance).length > 0) {
+    const pass = Object.values(compliance).filter(v => v === 'pass').length;
+    const fail = Object.values(compliance).filter(v => v === 'fail').length;
+    html += '<div class="section"><h2>Compliance Matrix <span style="color:var(--text-secondary);font-weight:400;font-size:13px">Pass: ' + pass + ' &nbsp; Fail: ' + fail + '</span></h2>';
+    html += '<div class="compliance-grid">';
+    for (const [item, st] of Object.entries(compliance)) {
+      html += '<div class="compliance-item ' + st + '">' + item + (st==='pass'?' &#10003;':st==='fail'?' &#10007;':' &#9675;') + '</div>';
+    }
+    html += '</div></div>';
+  }
+
+  // Activity log
+  if (events && events.length > 0) {
+    html += '<div class="section"><h2>Activity Log</h2>';
+    const recent = events.slice(0, 15);
+    recent.forEach(e => {
+      const time = (e.created_at||'').slice(11,16);
+      const step = e.step_id ? ' [' + e.step_id + ']' : '';
+      html += '<div class="log-entry"><span class="log-time">' + time + '</span> &nbsp;' + e.event_type + step + '</div>';
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('app').innerHTML = html;
+}
+
+refresh();
+setInterval(refresh, 30000);
+</script>
+</body>
+</html>
