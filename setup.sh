@@ -183,7 +183,6 @@ for (const agent of agents) {
         id: agent.id,
         name: agent.name,
         workspace: '~/.openclaw/workspaces/${MODULE_ID}/' + agent.dir,
-        role: agent.role,
         tools: toolPolicies[agent.role],
         subagents: { allowAgents: [] }
     });
