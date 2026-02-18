@@ -13,56 +13,36 @@
       {
         "id": "legacy-mod/commander",
         "name": "LM-Commander",
-        "role": "analysis",
         "tools": {
           "deny": ["write", "edit", "apply_patch"]
-        },
-        "subagents": {
-          "allowAgents": []
         }
       },
       {
         "id": "legacy-mod/architect",
         "name": "LM-Architect",
-        "role": "analysis",
         "tools": {
           "deny": ["write", "edit", "apply_patch"]
-        },
-        "subagents": {
-          "allowAgents": []
         }
       },
       {
         "id": "legacy-mod/documenter",
         "name": "LM-Documenter",
-        "role": "analysis",
         "tools": {
           "deny": ["write", "edit", "apply_patch"]
-        },
-        "subagents": {
-          "allowAgents": []
         }
       },
       {
         "id": "legacy-mod/compliance-gate",
         "name": "LM-ComplianceGate",
-        "role": "verification",
         "tools": {
           "deny": ["write", "edit", "apply_patch", "sessions_spawn", "sessions_send"]
-        },
-        "subagents": {
-          "allowAgents": []
         }
       },
       {
         "id": "legacy-mod/migrator",
         "name": "LM-Migrator",
-        "role": "coding",
         "tools": {
           "deny": []
-        },
-        "subagents": {
-          "allowAgents": []
         }
       }
     ]
