@@ -1,6 +1,6 @@
 # team-modernize
 
-An [OpenClaw](https://openclaw.dev) module that modernizes legacy applications through a phased, agent-driven pipeline. One-line install on any vanilla OpenClaw setup.
+An [OpenClaw](https://openclaw.ai) module that modernizes legacy applications through a phased, agent-driven pipeline. One-line install on any vanilla OpenClaw setup.
 
 Built on the "no tech debt vision" — every step produces clean, tested, documented, compliant code.
 

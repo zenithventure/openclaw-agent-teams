@@ -63,7 +63,7 @@ agents:
   - id: documenter
     name: Documenter
     role: analysis
-    model: claude-sonnet-4-5-20250929
+    model: claude-sonnet-4-6
     description: >
       Operations lead and documentation owner. Assembles customer-facing
       documentation, maintains compliance matrix, tracks migration progress.

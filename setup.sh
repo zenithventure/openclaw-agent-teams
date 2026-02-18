@@ -91,7 +91,7 @@ verify_openclaw() {
 
     if [[ ! -d "${OPENCLAW_DIR}" ]]; then
         log_err "OpenClaw directory not found at ${OPENCLAW_DIR}"
-        echo "  Install OpenClaw first: https://openclaw.dev"
+        echo "  Install OpenClaw first: https://openclaw.ai"
         exit 1
     fi
 
