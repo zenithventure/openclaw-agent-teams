@@ -1,4 +1,19 @@
 #!/usr/bin/env bash
+
+# =============================================================
+# Environment Detection
+# =============================================================
+if [[ -f /opt/openclaw-cli.sh ]]; then
+    echo "DigitalOcean OpenClaw detected."
+    echo "For DO installation, use: sudo bash do-team-install.sh TEAM_NAME"
+    exit 0
+fi
+if [[ "${1:-}" == "--help" ]]; then
+    echo "Setup script for bare-metal / self-hosted OpenClaw"
+    echo "On DigitalOcean: sudo bash do-team-install.sh TEAM_NAME"
+    exit 0
+fi
+
 # ============================================================
 # OpenClaw Team Setup — "Surrounded by Idiots" Edition
 # ============================================================
@@ -15,6 +30,36 @@
 #   3. Uncomment your channel in openclaw.json
 #   4. Set API keys in ~/.openclaw/.env
 # ============================================================
+
+# =============================================================
+# Environment Detection
+# =============================================================
+# Check if running on DigitalOcean OpenClaw droplet
+if [[ -f /opt/openclaw-cli.sh ]]; then
+    echo "DigitalOcean OpenClaw detected."
+    echo ""
+    echo "For DO installation, use the dedicated script:"
+    echo "  sudo bash do-team-install.sh operator"
+    echo ""
+    echo "This setup.sh is for bare-metal / self-hosted OpenClaw installations."
+    exit 0
+fi
+
+# Handle --help flag
+if [[ "${1:-}" == "--help" ]]; then
+    echo "Setup script for Operator team (bare-metal / self-hosted)"
+    echo ""
+    echo "If you're on DigitalOcean:"
+    echo "  sudo bash do-team-install.sh operator"
+    echo ""
+    echo "If you're running OpenClaw on your own infrastructure:"
+    echo "  ./setup.sh [options]"
+    echo ""
+    echo "Options:"
+    echo "  --clean     Wipe and reinstall all agents"
+    echo "  --uninstall Remove the team completely"
+    exit 0
+fi
 
 set -euo pipefail
 

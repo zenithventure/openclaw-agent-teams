@@ -1,4 +1,19 @@
 #!/usr/bin/env bash
+
+# =============================================================
+# Environment Detection
+# =============================================================
+if [[ -f /opt/openclaw-cli.sh ]]; then
+    echo "DigitalOcean OpenClaw detected."
+    echo "For DO installation, use: sudo bash do-team-install.sh TEAM_NAME"
+    exit 0
+fi
+if [[ "${1:-}" == "--help" ]]; then
+    echo "Setup script for bare-metal / self-hosted OpenClaw"
+    echo "On DigitalOcean: sudo bash do-team-install.sh TEAM_NAME"
+    exit 0
+fi
+
 # ============================================================
 # OpenClaw Team Setup — AI Product Builder Edition
 # ============================================================
@@ -25,6 +40,23 @@
 #   4. Run: openclaw start
 # ============================================================
 
+# =============================================================
+# Environment Detection
+# =============================================================
+# Check if running on DigitalOcean OpenClaw droplet
+if [[ -f /opt/openclaw-cli.sh ]]; then
+    echo "DigitalOcean OpenClaw detected."
+    echo ""
+    echo "For DO installation, use the dedicated script:"
+    echo "  sudo bash do-team-install.sh product-builder"
+    echo ""
+    echo "This setup.sh is for bare-metal / self-hosted OpenClaw installations."
+    exit 0
+fi
+
+# Handle --help flag
+if [[ "${1:-}" == "--help" ]]; then
+    echo "Setup script for Product
 set -euo pipefail
 
 # ── Colors ─────────────────────────────────────────────────
