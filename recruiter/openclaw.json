@@ -1,0 +1,73 @@
+{
+  "agents": {
+    "defaults": {
+      "compaction": {
+        "mode": "safeguard"
+      },
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
+      }
+    },
+    "list": [
+      {
+        "id": "red-headhunter",
+        "name": "Headhunter",
+        "role": "sourcing",
+        "workspace": "~/.openclaw/workspace-red-headhunter",
+        "subagents": {
+          "allowAgents": ["*"]
+        }
+      },
+      {
+        "id": "yellow-interviewer",
+        "name": "Interviewer",
+        "role": "interview-design",
+        "workspace": "~/.openclaw/workspace-yellow-interviewer",
+        "tools": {
+          "deny_write_paths": ["candidates/scores/"]
+        },
+        "subagents": {
+          "allowAgents": ["*"]
+        }
+      },
+      {
+        "id": "green-coordinator",
+        "name": "Coordinator",
+        "role": "coordination",
+        "workspace": "~/.openclaw/workspace-green-coordinator",
+        "subagents": {
+          "allowAgents": ["*"]
+        }
+      },
+      {
+        "id": "blue-compliance",
+        "name": "Compliance",
+        "role": "eeo-compliance",
+        "workspace": "~/.openclaw/workspace-blue-compliance",
+        "tools": {
+          "deny": ["write", "edit", "apply_patch"]
+        },
+        "subagents": {
+          "allowAgents": []
+        }
+      }
+    ]
+  },
+  "tools": {
+    "agentToAgent": {
+      "enabled": true,
+      "allow": [
+        "red-headhunter",
+        "yellow-interviewer",
+        "green-coordinator",
+        "blue-compliance"
+      ]
+    }
+  },
+  "skills": {
+    "load": {
+      "extraDirs": ["~/.openclaw/skills"]
+    }
+  }
+}

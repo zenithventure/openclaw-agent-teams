@@ -9,6 +9,9 @@ A collection of [OpenClaw](https://openclaw.ai) multi-agent team configurations,
 | [`modernizer/`](modernizer/) | Legacy Modernizer | Commander, Architect, Documenter, ComplianceGate, Migrator¹ | Modernize legacy applications through a phased, compliance-aware pipeline (LEARN → PLAN → EXECUTE) |
 | [`product-builder/`](product-builder/) | Product Builder | Architect, Builder, Ops, QA | Build products from idea to production using spec-first development, trunk-based workflows, and CI/CD |
 | [`operator/`](operator/) | Operator | Commander, Spark, Anchor, Lens | Design, build, and operate an autonomous business that generates recurring revenue |
+| [`accountant/`](accountant/) | Accountant | Controller, Bookkeeper, Reporter, Tax Prep | AI-powered back-office accounting for small businesses — categorize, reconcile, report, and track taxes |
+| [`recruiter/`](recruiter/) | Recruiter | Headhunter, Interviewer, Coordinator, Compliance | AI-powered recruiting team — source, screen, interview, and hire with built-in bias detection |
+| [`real-estate/`](real-estate/) | Real Estate | Deal Maker, Analyst, Coordinator, Underwriter | AI deal desk for real estate — comps, financial review, due diligence, and pipeline management |
 
 ¹ **Modernizer agent mapping:** The modernizer has 5 logical agents but 4 agent directories (`red-commander`, `blue-lens`, `yellow-spark`, `green-anchor`). The 5th agent (Migrator) reuses `red-commander`'s directory, as Commander transitions into the Migrator role during the EXECUTE phase. See the [modernizer README](modernizer/) for details.
 

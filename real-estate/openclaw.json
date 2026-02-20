@@ -1,0 +1,73 @@
+{
+  "agents": {
+    "defaults": {
+      "compaction": {
+        "mode": "safeguard"
+      },
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
+      }
+    },
+    "list": [
+      {
+        "id": "red-dealmaker",
+        "name": "DealMaker",
+        "role": "deal-leadership",
+        "workspace": "~/.openclaw/workspace-red-dealmaker",
+        "subagents": {
+          "allowAgents": ["*"]
+        }
+      },
+      {
+        "id": "yellow-analyst",
+        "name": "Analyst",
+        "role": "market-research",
+        "workspace": "~/.openclaw/workspace-yellow-analyst",
+        "tools": {
+          "allow_write_paths": ["reports/", "shared/reports/"]
+        },
+        "subagents": {
+          "allowAgents": ["*"]
+        }
+      },
+      {
+        "id": "green-coordinator",
+        "name": "Coordinator",
+        "role": "document-management",
+        "workspace": "~/.openclaw/workspace-green-coordinator",
+        "subagents": {
+          "allowAgents": ["*"]
+        }
+      },
+      {
+        "id": "blue-underwriter",
+        "name": "Underwriter",
+        "role": "risk-assessment",
+        "workspace": "~/.openclaw/workspace-blue-underwriter",
+        "tools": {
+          "deny_write_paths": ["deals/terms/", "shared/deals/terms/"]
+        },
+        "subagents": {
+          "allowAgents": []
+        }
+      }
+    ]
+  },
+  "tools": {
+    "agentToAgent": {
+      "enabled": true,
+      "allow": [
+        "red-dealmaker",
+        "yellow-analyst",
+        "green-coordinator",
+        "blue-underwriter"
+      ]
+    }
+  },
+  "skills": {
+    "load": {
+      "extraDirs": ["~/.openclaw/skills"]
+    }
+  }
+}

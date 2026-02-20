@@ -1,0 +1,76 @@
+{
+  "agents": {
+    "defaults": {
+      "compaction": {
+        "mode": "safeguard"
+      },
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
+      }
+    },
+    "list": [
+      {
+        "id": "red-controller",
+        "name": "Controller",
+        "role": "oversight",
+        "workspace": "~/.openclaw/workspace-red-controller",
+        "tools": {
+          "deny": ["write", "edit", "apply_patch"]
+        },
+        "subagents": {
+          "allowAgents": ["*"]
+        }
+      },
+      {
+        "id": "yellow-bookkeeper",
+        "name": "Bookkeeper",
+        "role": "bookkeeping",
+        "workspace": "~/.openclaw/workspace-yellow-bookkeeper",
+        "subagents": {
+          "allowAgents": ["*"]
+        }
+      },
+      {
+        "id": "green-reporter",
+        "name": "Reporter",
+        "role": "reporting",
+        "workspace": "~/.openclaw/workspace-green-reporter",
+        "tools": {
+          "allow_write_paths": ["reports/", "shared/reports/"]
+        },
+        "subagents": {
+          "allowAgents": ["*"]
+        }
+      },
+      {
+        "id": "blue-taxprep",
+        "name": "TaxPrep",
+        "role": "tax-compliance",
+        "workspace": "~/.openclaw/workspace-blue-taxprep",
+        "tools": {
+          "allow_write_paths": ["tax/", "shared/tax/"]
+        },
+        "subagents": {
+          "allowAgents": []
+        }
+      }
+    ]
+  },
+  "tools": {
+    "agentToAgent": {
+      "enabled": true,
+      "allow": [
+        "red-controller",
+        "yellow-bookkeeper",
+        "green-reporter",
+        "blue-taxprep"
+      ]
+    }
+  },
+  "skills": {
+    "load": {
+      "extraDirs": ["~/.openclaw/skills"]
+    }
+  }
+}
