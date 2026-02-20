@@ -5,14 +5,49 @@
 # Deploys a team of 4 agents for AI-powered back-office
 # accounting: Controller, Bookkeeper, Reporter, Tax Prep.
 #
-# Usage:
+# Usage (DigitalOcean):
+#   sudo bash do-team-install.sh accountant
+#
+# Usage (Bare Metal):
 #   ./setup.sh                    # Interactive setup
 #   ./setup.sh --clean            # Wipe and reinstall
 #   ./setup.sh --uninstall        # Remove everything
 #   ./setup.sh --vision "text"    # Set the vision inline
+#   ./setup.sh --help             # Show this help
 # ============================================================
 
 set -euo pipefail
+
+# =============================================================
+# Environment Detection
+# =============================================================
+# Check if running on DigitalOcean OpenClaw droplet
+if [[ -f /opt/openclaw-cli.sh ]]; then
+    echo "DigitalOcean OpenClaw detected."
+    echo ""
+    echo "For DO installation, use the dedicated script:"
+    echo "  sudo bash do-team-install.sh accountant"
+    echo ""
+    echo "This setup.sh is for bare-metal / self-hosted OpenClaw installations."
+    exit 0
+fi
+
+# Handle --help flag
+if [[ "${1:-}" == "--help" ]]; then
+    echo "Setup script for Accountant team (bare-metal / self-hosted)"
+    echo ""
+    echo "If you're on DigitalOcean:"
+    echo "  sudo bash do-team-install.sh accountant"
+    echo ""
+    echo "If you're running OpenClaw on your own infrastructure:"
+    echo "  ./setup.sh [options]"
+    echo ""
+    echo "Options:"
+    echo "  --clean     Wipe and reinstall all agents"
+    echo "  --uninstall Remove the team completely"
+    echo "  --vision TEXT  Set the VISION inline"
+    exit 0
+fi
 
 RED='\033[0;31m'
 YELLOW='\033[1;33m'

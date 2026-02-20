@@ -83,6 +83,76 @@ openclaw start
 ./setup.sh --vision "Manage bookkeeping for my freelance consulting business. Track income from 3 clients, categorize expenses, generate monthly P&L, estimate quarterly taxes."
 ```
 
+## Installation
+
+### Quick Start (DigitalOcean)
+
+The fastest way to get running:
+
+1. **Deploy a DO OpenClaw droplet** from the [DigitalOcean Marketplace](https://marketplace.digitalocean.com/apps/openclaw)
+2. **SSH into your droplet:**
+   ```bash
+   ssh root@your-droplet-ip
+   ```
+3. **Download and run the team installer:**
+   ```bash
+   curl -sL https://raw.githubusercontent.com/zenithventure/openclaw-agent-teams/main/accountant/do-team-install.sh | bash -s -- accountant
+   ```
+4. **Open your OpenClaw dashboard** at `https://your-droplet-ip`
+5. **Connect your messaging platform** (Telegram, WhatsApp, Discord, etc.)
+6. **Edit `shared/VISION.md`** with your accounting context
+7. **Start sending messages** to your agents!
+
+**What the installer does:**
+- Unlocks execution policies (enables agents to actually run tools)
+- Injects team configuration into the sandbox
+- Deploys 4 agents with DISC personalities
+- Restarts OpenClaw to load everything
+
+### Advanced (Bare Metal / Self-Hosted)
+
+If you're running OpenClaw on your own infrastructure:
+
+```bash
+./setup.sh                    # Interactive setup
+./setup.sh --clean            # Wipe and reinstall
+./setup.sh --uninstall        # Remove everything
+./setup.sh --vision "TEXT"    # Set VISION inline
+./setup.sh --help             # Show help
+```
+
+See the [OpenClaw documentation](https://docs.openclaw.ai) for installation steps.
+
+## Security Model
+
+### How the Agents Run
+
+**On DigitalOcean (Recommended):**
+- Agents run under a dedicated `openclaw` user (not root)
+- Execution happens inside a Docker container sandbox
+- Network and filesystem access are restricted by default
+- Execution policies must be explicitly unlocked (with full transparency about what each does)
+- This is intentional — agents have guardrails
+
+**Benefits:**
+- Agents cannot escalate to root or modify system config
+- Cannot access files outside their workspace
+- Cannot bypass network restrictions
+- Governance is enforced at the system level, not just by promises
+
+**On Bare Metal:**
+- Agents run with permissions you explicitly grant
+- More control, but also more responsibility
+- We recommend applying the same security principles: run as non-root, use process isolation, restrict network access
+
+### Why This Matters
+
+"Trusting the AI to be good" is not security. Trusting OpenClaw's execution model is.
+
+When you see "tools.exec.security full" in the setup, you're saying: "I trust the agents to make network calls and write files, within the sandbox." You're not saying "agents can do anything." The sandbox is the boundary.
+
+If you need a different security posture (more restrictive or less), you control it.
+
 ## Examples
 
 See the `examples/` folder for sample VISION files:
