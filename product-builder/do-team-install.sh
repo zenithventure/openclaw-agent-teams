@@ -79,25 +79,37 @@ fi
 
 echo "  Container: $CONTAINER_ID"
 
+# Download team files from repo (needed when script is piped from curl)
+WORK_DIR=$(mktemp -d)
+trap "rm -rf '$WORK_DIR'" EXIT
+echo "  Downloading team files..."
+git clone --depth 1 -q https://github.com/zenithventure/openclaw-agent-teams.git "$WORK_DIR/repo"
+TEAM_DIR="$WORK_DIR/repo/$TEAM_NAME"
+
+if [[ ! -d "$TEAM_DIR" ]]; then
+    echo -e "${RED}ERROR: Team directory '$TEAM_NAME' not found in repo.${NC}"
+    exit 1
+fi
+
 # Copy the team's openclaw.json into the sandbox workspace
 echo "  Copying team configuration..."
-docker cp "./openclaw.json" "$CONTAINER_ID:/workspace/openclaw.json"
+docker cp "$TEAM_DIR/openclaw.json" "$CONTAINER_ID:/workspace/openclaw.json"
 
 # Copy team skills
 echo "  Copying team skills..."
-docker cp "./shared/skills" "$CONTAINER_ID:/workspace/shared/"
+docker cp "$TEAM_DIR/shared/skills" "$CONTAINER_ID:/workspace/shared/"
 
 # Copy agent definitions
 echo "  Copying agent definitions..."
-for agent_dir in agents/*/; do
+for agent_dir in "$TEAM_DIR"/agents/*/; do
     agent_name=$(basename "$agent_dir")
     docker cp "$agent_dir" "$CONTAINER_ID:/workspace/agents/$agent_name"
 done
 
 # Copy shared context
 echo "  Copying shared context..."
-docker cp "./shared/VISION.md" "$CONTAINER_ID:/workspace/shared/VISION.md"
-docker cp "./shared/standup-log.md" "$CONTAINER_ID:/workspace/shared/standup-log.md" 2>/dev/null || true
+docker cp "$TEAM_DIR/shared/VISION.md" "$CONTAINER_ID:/workspace/shared/VISION.md"
+docker cp "$TEAM_DIR/shared/standup-log.md" "$CONTAINER_ID:/workspace/shared/standup-log.md" 2>/dev/null || true
 
 echo -e "${GREEN}✓ Team configuration injected${NC}"
 
