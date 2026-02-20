@@ -1,8 +1,8 @@
 # User Profile
 
-- **Name:** Mr Z
-- **Email:** szewong@gmail.com
-- **How to address:** Mr Z
+- **Name:** *(to be configured)*
+- **Email:** *(to be configured)*
+- **How to address:** *(to be configured)*
 - **Timezone:** {{ timezone }}
 - **Preferred report style:** Concise, action-oriented
 - **Communication channel:** {{ comm_channel }}
