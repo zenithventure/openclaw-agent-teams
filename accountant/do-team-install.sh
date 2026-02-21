@@ -100,8 +100,14 @@ fi
 echo "  Copying shared resources..."
 cp -r "$TEAM_DIR/shared" "$OPENCLAW_DIR/shared"
 
-echo "  Copying agent definitions..."
-cp -r "$TEAM_DIR/agents" "$OPENCLAW_DIR/agents"
+echo "  Setting up agent workspaces..."
+for agent_dir in "$TEAM_DIR"/agents/*/; do
+    agent_id=$(basename "$agent_dir")
+    workspace_dir="$OPENCLAW_DIR/workspace-$agent_id"
+    mkdir -p "$workspace_dir"
+    cp -r "$agent_dir"* "$workspace_dir/"
+    echo "    ✓ $agent_id → workspace-$agent_id"
+done
 
 chown -R openclaw:openclaw "$OPENCLAW_DIR"
 
