@@ -35,13 +35,44 @@ team-name/
   skills/                # Team-specific skill definitions (if any)
 ```
 
-## Getting Started
+## One-Line Install
 
-1. Pick a team that fits your use case
-2. Follow the team's own README for installation and configuration
-3. Edit `shared/VISION.md` to set your mission and constraints
-4. Update each agent's `USER.md` with your information
-5. Run `setup.sh` to install into your OpenClaw environment
+Pick a team and install it on any machine running [OpenClaw](https://docs.openclaw.ai):
+
+```bash
+# Product Builder
+git clone https://github.com/zenithventure/openclaw-agent-teams.git /tmp/openclaw-teams && bash /tmp/openclaw-teams/product-builder/setup.sh
+
+# Accountant
+git clone https://github.com/zenithventure/openclaw-agent-teams.git /tmp/openclaw-teams && bash /tmp/openclaw-teams/accountant/setup.sh
+
+# Recruiter
+git clone https://github.com/zenithventure/openclaw-agent-teams.git /tmp/openclaw-teams && bash /tmp/openclaw-teams/recruiter/setup.sh
+
+# Real Estate
+git clone https://github.com/zenithventure/openclaw-agent-teams.git /tmp/openclaw-teams && bash /tmp/openclaw-teams/real-estate/setup.sh
+
+# Modernizer
+git clone https://github.com/zenithventure/openclaw-agent-teams.git /tmp/openclaw-teams && bash /tmp/openclaw-teams/modernizer/setup.sh
+
+# Operator
+git clone https://github.com/zenithventure/openclaw-agent-teams.git /tmp/openclaw-teams && bash /tmp/openclaw-teams/operator/setup.sh
+```
+
+### After install
+
+1. Edit `~/.openclaw/shared/VISION.md` with your mission and constraints
+2. Update `USER.md` in each agent's workspace with your information
+3. Set your API key in `~/.openclaw/.env`
+4. Run `openclaw start`
+
+### Options
+
+```bash
+./setup.sh --vision "Build a SaaS for ..."   # Set vision inline
+./setup.sh --clean                             # Wipe and reinstall
+./setup.sh --uninstall                         # Remove everything
+```
 
 ## License
 

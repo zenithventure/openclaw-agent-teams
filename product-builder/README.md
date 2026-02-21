@@ -1,72 +1,27 @@
 # Installation
 
-## Quick Start (DigitalOcean)
-
-The fastest way to get running:
-
-1. **Deploy a DO OpenClaw droplet** from the [DigitalOcean Marketplace](https://marketplace.digitalocean.com/apps/openclaw)
-2. **SSH into your droplet:**
-   ```bash
-   ssh root@YOUR_DROPLET_IP
-   ```
-3. **Download and run the team installer:**
-   ```bash
-   curl -sL https://raw.githubusercontent.com/zenithventure/openclaw-agent-teams/main/product-builder/do-team-install.sh | bash -s -- product-builder
-   ```
-4. **Open your OpenClaw dashboard** at `https://your-droplet-ip`
-5. **Edit `shared/VISION.md`** with your business context
-6. **Start using your agents!**
-
-**What the installer does:**
-- Unlocks execution policies (enables agents to run tools)
-- Injects team configuration into the sandbox
-- Deploys all agents with DISC personalities
-- Restarts OpenClaw to load everything
-
-### Advanced (Bare Metal / Self-Hosted)
-
-If you're running OpenClaw on your own infrastructure:
+## One-Line Install
 
 ```bash
-./setup.sh                    # Interactive setup
-./setup.sh --clean            # Wipe and reinstall
-./setup.sh --help             # Show help
+git clone https://github.com/zenithventure/openclaw-agent-teams.git /tmp/openclaw-teams && bash /tmp/openclaw-teams/product-builder/setup.sh
 ```
 
-See the [OpenClaw documentation](https://docs.openclaw.ai) for installation steps.
+### After install
 
-## Security Model
+1. Edit `~/.openclaw/shared/VISION.md` with your project mission
+2. Update `USER.md` in each agent workspace with your info
+3. Set your API key in `~/.openclaw/.env`
+4. Run `openclaw start`
 
-### How the Agents Run
+### Options
 
-**On DigitalOcean (Recommended):**
-- Agents run under a dedicated `openclaw` user (not root)
-- Execution happens inside a Docker container sandbox
-- Network and filesystem access are restricted by default
-- Execution policies must be explicitly unlocked
+```bash
+./setup.sh --vision "Build a SaaS for ..."   # Set vision inline
+./setup.sh --clean                             # Wipe and reinstall
+./setup.sh --uninstall                         # Remove everything
+```
 
-**Benefits:**
-- Agents cannot escalate to root or modify system config
-- Cannot access files outside their workspace
-- Cannot bypass network restrictions
-- Governance is enforced at the system level
-
-**On Bare Metal:**
-- Agents run with permissions you explicitly grant
-- More control, but also more responsibility
-- We recommend the same security principles: run as non-root, use process isolation
-
-### Governance: What Gets Unlocked
-
-When deployed on DO, three execution policies are unlocked:
-
-**`tools.exec.host = gateway`** — Agents need a place to execute commands on a headless server
-
-**`tools.exec.ask = off`** — No human approval needed (no one's there to approve anyway)
-
-**`tools.exec.security = full`** — Full capability within the sandbox (network, filesystem operations)
-
-The sandbox boundary (Docker container, non-root user) is where the actual security lives.
+See the [OpenClaw documentation](https://docs.openclaw.ai) for full setup details.
 
 ---
 
