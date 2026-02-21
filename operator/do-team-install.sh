@@ -69,15 +69,12 @@ echo -e "${GREEN}✓ Execution policies unlocked${NC}"
 # =============================================================
 echo -e "${YELLOW}[3/5] Injecting team configuration into sandbox...${NC}"
 
-# Find the running OpenClaw container
-CONTAINER_ID=$(docker ps -q -f "name=openclaw-sbx" | head -1)
-if [[ -z "$CONTAINER_ID" ]]; then
-    echo -e "${RED}ERROR: No OpenClaw sandbox container found.${NC}"
-    echo "Try restarting: systemctl restart openclaw"
+OPENCLAW_DIR="/home/openclaw/.openclaw"
+if [[ ! -d "$OPENCLAW_DIR" ]]; then
+    echo -e "${RED}ERROR: $OPENCLAW_DIR not found.${NC}"
+    echo "OpenClaw may not be properly initialized."
     exit 1
 fi
-
-echo "  Container: $CONTAINER_ID"
 
 # Download team files from repo (needed when script is piped from curl)
 WORK_DIR=$(mktemp -d)
@@ -91,15 +88,22 @@ if [[ ! -d "$TEAM_DIR" ]]; then
     exit 1
 fi
 
-# Copy team files into the sandbox (docker cp runs as daemon, no mkdir needed)
-echo "  Copying team configuration..."
-docker cp "$TEAM_DIR/openclaw.json" "$CONTAINER_ID:/workspace/openclaw.json"
+# Merge team config into existing openclaw.json
+echo "  Merging team configuration..."
+if [[ -f "$OPENCLAW_DIR/openclaw.json" ]]; then
+    jq -s '.[0] * .[1]' "$OPENCLAW_DIR/openclaw.json" "$TEAM_DIR/openclaw.json" > "$WORK_DIR/merged.json"
+    cp "$WORK_DIR/merged.json" "$OPENCLAW_DIR/openclaw.json"
+else
+    cp "$TEAM_DIR/openclaw.json" "$OPENCLAW_DIR/openclaw.json"
+fi
 
 echo "  Copying shared resources..."
-docker cp "$TEAM_DIR/shared" "$CONTAINER_ID:/workspace/shared"
+cp -r "$TEAM_DIR/shared" "$OPENCLAW_DIR/shared"
 
 echo "  Copying agent definitions..."
-docker cp "$TEAM_DIR/agents" "$CONTAINER_ID:/workspace/agents"
+cp -r "$TEAM_DIR/agents" "$OPENCLAW_DIR/agents"
+
+chown -R openclaw:openclaw "$OPENCLAW_DIR"
 
 echo -e "${GREEN}✓ Team configuration injected${NC}"
 
@@ -127,7 +131,7 @@ echo -e "${GREEN}✓ OpenClaw restarted${NC}"
 echo -e "${YELLOW}[5/5] Verifying installation...${NC}"
 
 # Check that agents are configured
-AGENT_COUNT=$(grep -c '"name"' "$TEAM_DIR/openclaw.json" || echo "0")
+AGENT_COUNT=$(jq '.agents.list | length' "$OPENCLAW_DIR/openclaw.json" 2>/dev/null || echo "0")
 echo "  Agents configured: $AGENT_COUNT"
 
 echo -e "${GREEN}✓ Installation complete!${NC}"

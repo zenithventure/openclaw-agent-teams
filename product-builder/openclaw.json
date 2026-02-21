@@ -13,7 +13,6 @@
       {
         "id": "red-architect",
         "name": "Architect",
-        "role": "design",
         "workspace": "~/.openclaw/workspace-red-architect",
         "subagents": {
           "allowAgents": ["*"]
@@ -22,7 +21,6 @@
       {
         "id": "yellow-builder",
         "name": "Builder",
-        "role": "coding",
         "workspace": "~/.openclaw/workspace-yellow-builder",
         "subagents": {
           "allowAgents": ["*"]
@@ -31,7 +29,6 @@
       {
         "id": "green-ops",
         "name": "Ops",
-        "role": "operations",
         "workspace": "~/.openclaw/workspace-green-ops",
         "subagents": {
           "allowAgents": ["*"]
@@ -40,7 +37,6 @@
       {
         "id": "blue-qa",
         "name": "QA",
-        "role": "verification",
         "workspace": "~/.openclaw/workspace-blue-qa",
         "tools": {
           "deny": ["write", "edit", "apply_patch"]
