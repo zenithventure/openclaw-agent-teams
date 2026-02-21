@@ -92,7 +92,8 @@ if [[ ! -d "$TEAM_DIR" ]]; then
 fi
 
 # Ensure destination directories exist inside the container
-docker exec "$CONTAINER_ID" mkdir -p /workspace/agents /workspace/shared
+docker exec -u root "$CONTAINER_ID" mkdir -p /workspace/agents /workspace/shared
+docker exec -u root "$CONTAINER_ID" chown -R 1000:1000 /workspace/agents /workspace/shared
 
 # Copy the team's openclaw.json into the sandbox workspace
 echo "  Copying team configuration..."
