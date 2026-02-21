@@ -91,6 +91,9 @@ if [[ ! -d "$TEAM_DIR" ]]; then
     exit 1
 fi
 
+# Ensure destination directories exist inside the container
+docker exec "$CONTAINER_ID" mkdir -p /workspace/agents /workspace/shared
+
 # Copy the team's openclaw.json into the sandbox workspace
 echo "  Copying team configuration..."
 docker cp "$TEAM_DIR/openclaw.json" "$CONTAINER_ID:/workspace/openclaw.json"
