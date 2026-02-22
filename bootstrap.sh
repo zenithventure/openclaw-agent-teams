@@ -310,6 +310,13 @@ create_openclaw_user() {
         useradd --system --create-home --home-dir "$OPENCLAW_HOME" --shell /bin/bash openclaw
         log_ok "Created system user: openclaw"
     fi
+
+    # Ensure npm global bin is on PATH for interactive shells
+    local bashrc="${OPENCLAW_HOME}/.bashrc"
+    if ! grep -q '.npm-global/bin' "$bashrc" 2>/dev/null; then
+        echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$bashrc"
+        chown openclaw:openclaw "$bashrc"
+    fi
 }
 
 # ── Install Node.js ────────────────────────────────────────
