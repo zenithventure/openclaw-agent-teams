@@ -20,7 +20,15 @@ Then:
 
 ## Deploy to DigitalOcean
 
-Deploy any team to a fresh Ubuntu 24.04 droplet with a single command. The bootstrap script handles server hardening, Node.js, OpenClaw installation, team deployment, TLS via Caddy, and systemd — all in one shot.
+One `curl` command takes a bare Ubuntu 24.04 droplet from **zero to a fully hardened, TLS-terminated, production-ready OpenClaw instance** — with your agent team already deployed and running as a systemd service. No manual setup, no config files to edit, no second SSH session.
+
+Here's what that single command does across 5 automated phases:
+
+1. **Hardens the server** — creates a randomized admin user, locks down SSH (key-only, no passwords), enables UFW (ports 22/80/443 only), activates fail2ban, and adds swap for low-memory droplets
+2. **Installs OpenClaw** — sets up a dedicated `openclaw` system user (no login, no sudo), installs Node.js 22.x, installs OpenClaw, and registers it as a systemd service
+3. **Deploys your team** — clones this repo, runs the team's `setup.sh`, wires up your API key, and sets correct file ownership
+4. **Configures TLS** — installs Caddy as a reverse proxy with automatic Let's Encrypt certificates (or self-signed if no domain), so your gateway is HTTPS from minute one
+5. **Starts everything** — launches the gateway, runs a health check, and prints your access URL, SSH command, and admin credentials
 
 ```bash
 ssh root@YOUR_DROPLET_IP
@@ -33,7 +41,7 @@ curl -fsSL https://raw.githubusercontent.com/zenithventure/openclaw-agent-teams/
   | bash -s -- --team operator
 ```
 
-See [DO-SETUP.md](DO-SETUP.md) for full options (`--domain`, `--api-key`, `--user`, etc.) and details.
+The script is idempotent — safe to run again if interrupted. See [DO-SETUP.md](DO-SETUP.md) for full options (`--domain`, `--api-key`, `--user`, etc.) and details.
 
 ## Teams
 
