@@ -74,6 +74,19 @@ git clone https://github.com/zenithventure/openclaw-agent-teams.git /tmp/opencla
 ./setup.sh --uninstall                         # Remove everything
 ```
 
+## Deploy to DigitalOcean
+
+Deploy any team to a fresh Ubuntu 24.04 droplet with a single command. The bootstrap script handles server hardening, Node.js, OpenClaw installation, team deployment, TLS via Caddy, and systemd — all in one shot.
+
+```bash
+ssh root@YOUR_DROPLET_IP
+
+curl -fsSL https://raw.githubusercontent.com/zenithventure/openclaw-agent-teams/main/bootstrap.sh \
+  | bash -s -- --team product-builder
+```
+
+See [DO-SETUP.md](DO-SETUP.md) for full options (`--domain`, `--api-key`, `--user`, etc.) and details.
+
 ## License
 
 MIT
