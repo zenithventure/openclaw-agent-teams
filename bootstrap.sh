@@ -191,6 +191,13 @@ log_step "[1/5] Server hardening..."
 install_packages() {
     log_step "  Installing system packages..."
     export DEBIAN_FRONTEND=noninteractive
+
+    # Wait for any running apt/dpkg processes (e.g. unattended-upgrades on first boot)
+    while fuser /var/lib/dpkg/lock-frontend &>/dev/null 2>&1; do
+        log_step "  Waiting for dpkg lock (unattended-upgrades?)..."
+        sleep 5
+    done
+
     apt-get update -qq
     apt-get install -y -qq curl vim git ufw build-essential python3 jq fail2ban ca-certificates gnupg > /dev/null
     log_ok "System packages installed"
