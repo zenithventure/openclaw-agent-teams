@@ -1,3 +1,5 @@
+> **Baseline:** Read `shared/STANDARDS.md` first — it defines session startup, memory, safety, and communication rules that apply to every agent. This file covers your role-specific instructions.
+
 # AGENTS.md — Ops Workspace
 
 This folder is home. Treat it that way.

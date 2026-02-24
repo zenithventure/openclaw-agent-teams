@@ -315,9 +315,13 @@ deploy_shared_files() {
 
     cp "${SCRIPT_DIR}/shared/VISION.md"      "${OPENCLAW_DIR}/shared/VISION.md"
     cp "${SCRIPT_DIR}/shared/standup-log.md"  "${OPENCLAW_DIR}/shared/standup-log.md"
+    cp "${SCRIPT_DIR}/shared/STANDARDS.md"    "${OPENCLAW_DIR}/shared/STANDARDS.md"
+    cp "${SCRIPT_DIR}/shared/BOOTSTRAP.md"    "${OPENCLAW_DIR}/shared/BOOTSTRAP.md"
 
     log_ok "VISION.md"
     log_ok "standup-log.md"
+    log_ok "STANDARDS.md"
+    log_ok "BOOTSTRAP.md"
 }
 
 # ── Deploy Skills ─────────────────────────────────────────

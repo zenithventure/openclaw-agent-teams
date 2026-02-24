@@ -400,6 +400,18 @@ copy_shared_files() {
         log_ok "standup-log.md"
     fi
 
+    # Copy STANDARDS.md
+    if [[ -f "${SCRIPT_DIR}/shared/STANDARDS.md" ]]; then
+        cp "${SCRIPT_DIR}/shared/STANDARDS.md" "${shared_dir}/STANDARDS.md"
+        log_ok "STANDARDS.md"
+    fi
+
+    # Copy BOOTSTRAP.md
+    if [[ -f "${SCRIPT_DIR}/shared/BOOTSTRAP.md" ]]; then
+        cp "${SCRIPT_DIR}/shared/BOOTSTRAP.md" "${shared_dir}/BOOTSTRAP.md"
+        log_ok "BOOTSTRAP.md"
+    fi
+
     # Copy workflow.yml
     if [[ -f "${SCRIPT_DIR}/workflows/legacy-mod/workflow.yml" ]]; then
         cp "${SCRIPT_DIR}/workflows/legacy-mod/workflow.yml" "${shared_dir}/workflow.yml"
