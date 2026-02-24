@@ -276,12 +276,17 @@ create_openclaw_user() {
     systemctl start "user@${OPENCLAW_UID}.service"
     log_ok "Lingering enabled, systemd user session started"
 
-    # Ensure npm global bin is on PATH for interactive shells
+    # Ensure npm global bin and XDG_RUNTIME_DIR are set for interactive shells
+    # (sudo -u openclaw -i doesn't go through full PAM, so systemd user
+    # services need XDG_RUNTIME_DIR explicitly)
     local bashrc="${OPENCLAW_HOME}/.bashrc"
     if ! grep -q '.npm-global/bin' "$bashrc" 2>/dev/null; then
         echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$bashrc"
-        chown openclaw:openclaw "$bashrc"
     fi
+    if ! grep -q 'XDG_RUNTIME_DIR' "$bashrc" 2>/dev/null; then
+        echo 'export XDG_RUNTIME_DIR="/run/user/$(id -u)"' >> "$bashrc"
+    fi
+    chown openclaw:openclaw "$bashrc"
 }
 
 # ── Install Node.js ────────────────────────────────────────
