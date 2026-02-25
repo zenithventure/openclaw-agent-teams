@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw Agent Teams — Production-Ready AI Agent Teams</title>
+    <meta name="description" content="Deploy multi-agent AI teams in one command. Six ready-to-run team configurations for OpenClaw — locally or on DigitalOcean with full TLS and server hardening.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #08080c;
+            --bg-secondary: #0f0f16;
+            --bg-card: #16161f;
+            --text-primary: #ffffff;
+            --text-secondary: #9d9db5;
+            --text-muted: #5e5e76;
+            --accent-green: #22c55e;
+            --accent-lime: #84cc16;
+            --accent-yellow: #eab308;
+            --accent-gradient: linear-gradient(135deg, #22c55e 0%, #84cc16 50%, #eab308 100%);
+            --border-color: rgba(255, 255, 255, 0.06);
+            --disc-red: #ef4444;
+            --disc-yellow: #eab308;
+            --disc-green: #22c55e;
+            --disc-blue: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: rgba(8, 8, 12, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .nav-divider {
+            color: var(--text-muted);
+        }
+
+        .nav-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .nav-link {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--bg-primary);
+            background: var(--accent-green);
+            padding: 0.5rem 1.25rem;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        }
+
+        /* Hero */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 8rem 2rem 6rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(34, 197, 94, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1.25rem;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            background: rgba(34, 197, 94, 0.08);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--accent-green);
+            margin-bottom: 2rem;
+        }
+
+        .hero h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            max-width: 800px;
+            margin-bottom: 1.5rem;
+        }
+
+        .gradient-text {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-sub {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 640px;
+            margin-bottom: 2.5rem;
+            line-height: 1.7;
+        }
+
+        .hero-command {
+            position: relative;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem 3.5rem 1.25rem 1.5rem;
+            max-width: 720px;
+            width: 100%;
+            margin-bottom: 1.5rem;
+            text-align: left;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .hero-command:hover {
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+
+        .hero-command-label {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent-green);
+            margin-bottom: 0.75rem;
+        }
+
+        .hero-command-text {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            word-break: break-all;
+            user-select: all;
+        }
+
+        .hero-command-text .prompt {
+            color: var(--text-muted);
+            user-select: none;
+        }
+
+        .copy-icon {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 4px;
+            transition: color 0.2s;
+            line-height: 0;
+        }
+
+        .copy-icon:hover {
+            color: var(--accent-green);
+        }
+
+        .copy-icon.copied {
+            color: var(--accent-green);
+        }
+
+        .copy-icon svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .hero-arrow {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+        }
+
+        .hero-cta {
+            display: inline-block;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--bg-primary);
+            background: var(--accent-green);
+            padding: 1rem 2.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .hero-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(34, 197, 94, 0.3);
+        }
+
+        /* Section base */
+        .section-heading {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+            font-size: 1rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Teams */
+        .teams {
+            padding: 6rem 2rem;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .teams-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .team-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: border-color 0.2s, transform 0.2s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .team-card:hover {
+            border-color: rgba(34, 197, 94, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .team-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .team-card-icon {
+            font-size: 1.5rem;
+            width: 2rem;
+            text-align: center;
+        }
+
+        .team-card h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .team-card p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .team-card-agents {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .agent-tag {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            border: 1px solid;
+        }
+
+        .agent-tag.red {
+            color: var(--disc-red);
+            border-color: rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.08);
+        }
+
+        .agent-tag.yellow {
+            color: var(--disc-yellow);
+            border-color: rgba(234, 179, 8, 0.3);
+            background: rgba(234, 179, 8, 0.08);
+        }
+
+        .agent-tag.green {
+            color: var(--disc-green);
+            border-color: rgba(34, 197, 94, 0.3);
+            background: rgba(34, 197, 94, 0.08);
+        }
+
+        .agent-tag.blue {
+            color: var(--disc-blue);
+            border-color: rgba(59, 130, 246, 0.3);
+            background: rgba(59, 130, 246, 0.08);
+        }
+
+        .team-card-flag {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.75rem;
+            color: var(--accent-green);
+            margin-top: 0.75rem;
+        }
+
+        /* DigitalOcean Deploy */
+        .do-deploy {
+            padding: 6rem 2rem;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .do-banner {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 16px;
+            padding: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .do-banner h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .do-banner p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        .do-scripts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .do-script-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .do-script-card h4 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .do-script-card .script-name {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.8rem;
+            color: var(--accent-green);
+            margin-bottom: 0.75rem;
+        }
+
+        .do-script-card p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 0.75rem;
+        }
+
+        .do-script-card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .do-script-card ul li {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            padding: 0.2rem 0;
+            padding-left: 1.25rem;
+            position: relative;
+        }
+
+        .do-script-card ul li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.55rem;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-green);
+        }
+
+        .do-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .do-step {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .do-step-number {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 800;
+            font-size: 1.5rem;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            flex-shrink: 0;
+            width: 2rem;
+        }
+
+        .do-step h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .do-step p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .do-step code {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.8rem;
+            background: var(--bg-primary);
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            color: var(--accent-green);
+        }
+
+        .do-step .step-command {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.8rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-top: 0.75rem;
+            color: var(--text-secondary);
+            word-break: break-all;
+            line-height: 1.7;
+        }
+
+        .do-step .step-command .prompt {
+            color: var(--text-muted);
+        }
+
+        .do-step .step-label {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        /* Features */
+        .features {
+            padding: 6rem 2rem;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-card p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Structure */
+        .structure {
+            padding: 6rem 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .structure-tree {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .structure-tree .dir {
+            color: var(--accent-green);
+        }
+
+        .structure-tree .comment {
+            color: var(--text-muted);
+        }
+
+        /* Footer */
+        footer {
+            padding: 4rem 2rem;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--text-primary);
+        }
+
+        footer p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav {
+                padding: 0.75rem 1.25rem;
+            }
+
+            .hero {
+                padding: 7rem 1.25rem 4rem;
+            }
+
+            .hero-command {
+                padding: 1.25rem 1.5rem;
+            }
+
+            .hero-command-text {
+                font-size: 0.8rem;
+            }
+
+            .teams-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .do-scripts {
+                grid-template-columns: 1fr;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .do-step {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-left">
+            <a class="nav-logo" href="https://zenithstudio.io">Zenith</a>
+            <span class="nav-divider">/</span>
+            <span class="nav-title">Agent Teams</span>
+        </div>
+        <a class="nav-link" href="https://github.com/zenithventure/openclaw-agent-teams">GitHub</a>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-badge">
+            Open source &middot; 6 ready-to-deploy teams
+        </div>
+        <h1>
+            <span class="gradient-text">AI Agent Teams</span>
+            for OpenClaw
+        </h1>
+        <p class="hero-sub">
+            Production-ready multi-agent team configurations. Each team ships with agents, skills, shared context, and a one-line installer &mdash; deploy locally or to DigitalOcean.
+        </p>
+        <div class="hero-command" onclick="copyCommand(this)" data-copy="git clone https://github.com/zenithventure/openclaw-agent-teams.git /tmp/openclaw-teams && bash /tmp/openclaw-teams/operator/setup.sh">
+            <div class="hero-command-label">Quick start</div>
+            <div class="hero-command-text"><span class="prompt">$ </span>git clone https://github.com/zenithventure/openclaw-agent-teams.git /tmp/openclaw-teams \<br>&nbsp;&nbsp;&& bash /tmp/openclaw-teams/operator/setup.sh</div>
+            <button class="copy-icon" aria-label="Copy to clipboard"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg></button>
+        </div>
+        <p class="hero-arrow">Replace "operator" with any team name. Edit VISION.md, set your API key, and run openclaw start.</p>
+        <a class="hero-cta" href="https://github.com/zenithventure/openclaw-agent-teams">View on GitHub</a>
+    </section>
+
+    <section class="teams">
+        <h2 class="section-heading">Teams</h2>
+        <p class="section-subtitle">Six self-contained teams, each built around the DISC personality model with four specialized agents.</p>
+        <div class="teams-grid">
+            <a class="team-card" href="https://github.com/zenithventure/openclaw-agent-teams/tree/main/operator">
+                <div class="team-card-header">
+                    <div class="team-card-icon">&#x1f3af;</div>
+                    <h3>Operator</h3>
+                </div>
+                <p>Design, build, and operate an autonomous business that generates recurring revenue.</p>
+                <div class="team-card-agents">
+                    <span class="agent-tag red">Commander</span>
+                    <span class="agent-tag yellow">Spark</span>
+                    <span class="agent-tag green">Anchor</span>
+                    <span class="agent-tag blue">Lens</span>
+                </div>
+                <div class="team-card-flag">--team operator</div>
+            </a>
+            <a class="team-card" href="https://github.com/zenithventure/openclaw-agent-teams/tree/main/product-builder">
+                <div class="team-card-header">
+                    <div class="team-card-icon">&#x1f528;</div>
+                    <h3>Product Builder</h3>
+                </div>
+                <p>Build products from idea to production using spec-first development and CI/CD.</p>
+                <div class="team-card-agents">
+                    <span class="agent-tag red">Architect</span>
+                    <span class="agent-tag yellow">Builder</span>
+                    <span class="agent-tag green">Ops</span>
+                    <span class="agent-tag blue">QA</span>
+                </div>
+                <div class="team-card-flag">--team product-builder</div>
+            </a>
+            <a class="team-card" href="https://github.com/zenithventure/openclaw-agent-teams/tree/main/modernizer">
+                <div class="team-card-header">
+                    <div class="team-card-icon">&#x1f504;</div>
+                    <h3>Legacy Modernizer</h3>
+                </div>
+                <p>Modernize legacy apps through a phased, compliance-aware pipeline: LEARN, PLAN, EXECUTE.</p>
+                <div class="team-card-agents">
+                    <span class="agent-tag red">Commander</span>
+                    <span class="agent-tag yellow">Architect</span>
+                    <span class="agent-tag green">Documenter</span>
+                    <span class="agent-tag blue">ComplianceGate</span>
+                </div>
+                <div class="team-card-flag">--team modernizer</div>
+            </a>
+            <a class="team-card" href="https://github.com/zenithventure/openclaw-agent-teams/tree/main/accountant">
+                <div class="team-card-header">
+                    <div class="team-card-icon">&#x1f4b0;</div>
+                    <h3>Accountant</h3>
+                </div>
+                <p>AI-powered back-office accounting &mdash; categorize, reconcile, report, and track taxes.</p>
+                <div class="team-card-agents">
+                    <span class="agent-tag red">Controller</span>
+                    <span class="agent-tag yellow">Bookkeeper</span>
+                    <span class="agent-tag green">Reporter</span>
+                    <span class="agent-tag blue">Tax Prep</span>
+                </div>
+                <div class="team-card-flag">--team accountant</div>
+            </a>
+            <a class="team-card" href="https://github.com/zenithventure/openclaw-agent-teams/tree/main/recruiter">
+                <div class="team-card-header">
+                    <div class="team-card-icon">&#x1f465;</div>
+                    <h3>Recruiter</h3>
+                </div>
+                <p>AI-powered recruiting &mdash; source, screen, interview, and hire with built-in bias detection.</p>
+                <div class="team-card-agents">
+                    <span class="agent-tag red">Headhunter</span>
+                    <span class="agent-tag yellow">Interviewer</span>
+                    <span class="agent-tag green">Coordinator</span>
+                    <span class="agent-tag blue">Compliance</span>
+                </div>
+                <div class="team-card-flag">--team recruiter</div>
+            </a>
+            <a class="team-card" href="https://github.com/zenithventure/openclaw-agent-teams/tree/main/real-estate">
+                <div class="team-card-header">
+                    <div class="team-card-icon">&#x1f3e0;</div>
+                    <h3>Real Estate</h3>
+                </div>
+                <p>AI deal desk &mdash; comps, financial review, due diligence, and pipeline management.</p>
+                <div class="team-card-agents">
+                    <span class="agent-tag red">Deal Maker</span>
+                    <span class="agent-tag yellow">Analyst</span>
+                    <span class="agent-tag green">Coordinator</span>
+                    <span class="agent-tag blue">Underwriter</span>
+                </div>
+                <div class="team-card-flag">--team real-estate</div>
+            </a>
+        </div>
+    </section>
+
+    <section class="do-deploy" id="digitalocean">
+        <h2 class="section-heading">Deploy to DigitalOcean</h2>
+        <p class="section-subtitle">Three steps take a bare Ubuntu 24.04 droplet from zero to a fully hardened, TLS-terminated, production-ready instance.</p>
+
+        <div class="do-banner">
+            <h3>Two scripts. Zero to production.</h3>
+            <p>bootstrap.sh hardens your server and sets up the infrastructure. install-team.sh deploys your chosen agent team. Both are idempotent and safe to re-run.</p>
+        </div>
+
+        <div class="do-scripts">
+            <div class="do-script-card">
+                <h4>Server Provisioner</h4>
+                <div class="script-name">bootstrap.sh</div>
+                <p>Run as root on a fresh Ubuntu 24.04 droplet. Handles everything from security hardening to TLS termination.</p>
+                <ul>
+                    <li>Creates admin user with SSH keys</li>
+                    <li>Configures UFW firewall (22, 80, 443)</li>
+                    <li>Enables fail2ban for brute-force protection</li>
+                    <li>Installs Node.js 22.x</li>
+                    <li>Creates openclaw service user</li>
+                    <li>Sets up Caddy with auto Let's Encrypt TLS</li>
+                    <li>Adds swap on small droplets</li>
+                </ul>
+            </div>
+            <div class="do-script-card">
+                <h4>Team Deployer</h4>
+                <div class="script-name">install-team.sh</div>
+                <p>Run as the openclaw user after installing OpenClaw. Deploys any team in a single command.</p>
+                <ul>
+                    <li>Clones the teams repo (shallow, fast)</li>
+                    <li>Runs the team's setup.sh</li>
+                    <li>Deploys agent workspaces and skills</li>
+                    <li>Merges config without overwriting</li>
+                    <li>Optionally sets API key</li>
+                    <li>Prints summary and next steps</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="do-steps">
+            <div class="do-step">
+                <div class="do-step-number">1</div>
+                <div>
+                    <div class="step-label">As root</div>
+                    <h3>Bootstrap the server</h3>
+                    <p>Hardens the server, creates users, installs Node.js, and provisions TLS via Caddy. Pass <code>--domain</code> for Let's Encrypt, or omit for self-signed.</p>
+                    <div class="step-command"><span class="prompt">$ </span>curl -fsSL https://raw.githubusercontent.com/zenithventure/openclaw-agent-teams/main/bootstrap.sh | bash -s</div>
+                </div>
+            </div>
+            <div class="do-step">
+                <div class="do-step-number">2</div>
+                <div>
+                    <div class="step-label">As openclaw user</div>
+                    <h3>Install OpenClaw</h3>
+                    <p>Switch to the openclaw user and run the official installer. Onboarding walks you through channel setup, tokens, and API keys.</p>
+                    <div class="step-command"><span class="prompt">$ </span>sudo -u openclaw -i<br><span class="prompt">$ </span>curl -fsSL https://openclaw.ai/install.sh | bash</div>
+                </div>
+            </div>
+            <div class="do-step">
+                <div class="do-step-number">3</div>
+                <div>
+                    <div class="step-label">Still as openclaw user</div>
+                    <h3>Deploy your team</h3>
+                    <p>Pick any team and deploy it. The script clones the repo, runs setup, and deploys agent workspaces and skills.</p>
+                    <div class="step-command"><span class="prompt">$ </span>curl -fsSL https://raw.githubusercontent.com/zenithventure/openclaw-agent-teams/main/install-team.sh \<br>&nbsp;&nbsp;| bash -s -- --team operator</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features">
+        <h2 class="section-heading">Built for production</h2>
+        <p class="section-subtitle">Every team follows the same battle-tested patterns.</p>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">&#x1f9e9;</div>
+                <h3>DISC personality model</h3>
+                <p>Four agents per team &mdash; Red (Dominance), Yellow (Influence), Green (Steadiness), Blue (Conscientiousness) &mdash; for balanced decision-making.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#x1f500;</div>
+                <h3>Idempotent installs</h3>
+                <p>Every script is safe to re-run. Users are checked before creation, configs are merged not replaced, and existing data is preserved.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#x1f9e0;</div>
+                <h3>File-based memory</h3>
+                <p>Agents persist context across sessions through daily memory files and a curated MEMORY.md. No external database required.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#x1f512;</div>
+                <h3>Secure by default</h3>
+                <p>UFW firewall, fail2ban, SSH key-only auth, non-standard usernames, and TLS termination &mdash; all configured automatically by bootstrap.sh.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#x1f4cb;</div>
+                <h3>Shared standards</h3>
+                <p>STANDARDS.md governs session boot, memory management, safety rules, and group chat behavior. Consistent across every team.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#x1f680;</div>
+                <h3>First-run onboarding</h3>
+                <p>BOOTSTRAP.md walks through VISION.md and USER.md setup on first run, then self-deletes. Zero manual configuration.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="structure">
+        <h2 class="section-heading">Common structure</h2>
+        <p class="section-subtitle">Every team follows this layout. Learn one, understand them all.</p>
+        <div class="structure-tree">
+            <span class="dir">team-name/</span><br>
+            &nbsp;&nbsp;openclaw.json <span class="comment"># agent definitions, tool permissions</span><br>
+            &nbsp;&nbsp;setup.sh <span class="comment"># one-line installer</span><br>
+            &nbsp;&nbsp;<span class="dir">agents/</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">red-&lt;role&gt;/</span> <span class="comment"># DISC: Dominance</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IDENTITY.md, SOUL.md, AGENTS.md<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;USER.md, HEARTBEAT.md<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">yellow-&lt;role&gt;/</span> <span class="comment"># DISC: Influence</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">green-&lt;role&gt;/</span> <span class="comment"># DISC: Steadiness</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">blue-&lt;role&gt;/</span> <span class="comment"># DISC: Conscientiousness</span><br>
+            &nbsp;&nbsp;<span class="dir">shared/</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;VISION.md <span class="comment"># mission, success criteria</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;STANDARDS.md <span class="comment"># behavioral standards</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;BOOTSTRAP.md <span class="comment"># first-run wizard</span><br>
+            &nbsp;&nbsp;<span class="dir">skills/</span> <span class="comment"># team-specific skills</span>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-links">
+            <a href="https://zenithstudio.io">Zenith Venture Studio</a>
+            <a href="https://openclaw.ai">OpenClaw</a>
+            <a href="https://docs.openclaw.ai">Docs</a>
+            <a href="https://github.com/zenithventure/openclaw-agent-teams">GitHub</a>
+        </div>
+        <p>&copy; 2026 Zenith Venture Studio. Built for builders.</p>
+    </footer>
+
+    <script>
+    function copyCommand(el) {
+        var text = el.getAttribute('data-copy');
+        navigator.clipboard.writeText(text).then(function() {
+            var icon = el.querySelector('.copy-icon');
+            icon.classList.add('copied');
+            icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>';
+            setTimeout(function() {
+                icon.classList.remove('copied');
+                icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg>';
+            }, 2000);
+        });
+    }
+    </script>
+</body>
+</html>
