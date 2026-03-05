@@ -286,6 +286,9 @@ create_openclaw_user() {
     if ! grep -q 'XDG_RUNTIME_DIR' "$bashrc" 2>/dev/null; then
         echo 'export XDG_RUNTIME_DIR="/run/user/$(id -u)"' >> "$bashrc"
     fi
+    if ! grep -q 'DBUS_SESSION_BUS_ADDRESS' "$bashrc" 2>/dev/null; then
+        echo 'export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"' >> "$bashrc"
+    fi
     chown openclaw:openclaw "$bashrc"
 }
 
