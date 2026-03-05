@@ -276,20 +276,23 @@ create_openclaw_user() {
     systemctl start "user@${OPENCLAW_UID}.service"
     log_ok "Lingering enabled, systemd user session started"
 
-    # Ensure npm global bin and XDG_RUNTIME_DIR are set for interactive shells
-    # (sudo -u openclaw -i doesn't go through full PAM, so systemd user
-    # services need XDG_RUNTIME_DIR explicitly)
+    # Ensure npm global bin, XDG_RUNTIME_DIR, and DBUS_SESSION_BUS_ADDRESS
+    # are set for all shell types (login, interactive, and non-interactive).
+    # .profile is sourced by login shells; .bashrc by interactive shells.
+    local profile="${OPENCLAW_HOME}/.profile"
     local bashrc="${OPENCLAW_HOME}/.bashrc"
-    if ! grep -q '.npm-global/bin' "$bashrc" 2>/dev/null; then
-        echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$bashrc"
-    fi
-    if ! grep -q 'XDG_RUNTIME_DIR' "$bashrc" 2>/dev/null; then
-        echo 'export XDG_RUNTIME_DIR="/run/user/$(id -u)"' >> "$bashrc"
-    fi
-    if ! grep -q 'DBUS_SESSION_BUS_ADDRESS' "$bashrc" 2>/dev/null; then
-        echo 'export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"' >> "$bashrc"
-    fi
-    chown openclaw:openclaw "$bashrc"
+    for rc in "$profile" "$bashrc"; do
+        if ! grep -q '.npm-global/bin' "$rc" 2>/dev/null; then
+            echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$rc"
+        fi
+        if ! grep -q 'XDG_RUNTIME_DIR' "$rc" 2>/dev/null; then
+            echo 'export XDG_RUNTIME_DIR="/run/user/$(id -u)"' >> "$rc"
+        fi
+        if ! grep -q 'DBUS_SESSION_BUS_ADDRESS' "$rc" 2>/dev/null; then
+            echo 'export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"' >> "$rc"
+        fi
+        chown openclaw:openclaw "$rc"
+    done
 }
 
 # ── Install Node.js ────────────────────────────────────────
