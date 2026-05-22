@@ -882,7 +882,41 @@
             </div>
         </div>
 
+    </section>
+
+    <section class="do-deploy" id="ansible">
+        <h2 class="section-heading">Fleet deploy with Ansible</h2>
+        <p class="section-subtitle">For many droplets, declarative inventory, or repeatable rebuilds — the same flow, mirrored as two playbooks.</p>
+
+        <div class="do-banner">
+            <h3>Two playbooks. Same result.</h3>
+            <p><code>ansible/bootstrap.yml</code> mirrors <code>bootstrap.sh</code>; <code>ansible/openclaw-team.yml</code> mirrors <code>install-team.sh</code>. Run them against your inventory and every droplet ends up in the same place as the shell flow. Requires Ansible 2.14+.</p>
+        </div>
+
+        <div class="do-steps">
+            <div class="do-step">
+                <div class="do-step-number">1</div>
+                <div>
+                    <div class="step-label">From your control machine</div>
+                    <h3>Bootstrap the fleet</h3>
+                    <p>Hardens each droplet, creates the <code>openclaw</code> and <code>claude</code> users, installs Node.js 22, and provisions Caddy with TLS — for every host in <code>-l droplets</code>.</p>
+                    <div class="step-command" onclick="copyCommand(this)" data-copy="ansible-playbook -i hosts ansible/bootstrap.yml -l droplets -e admin_user=szewong -e domain=teams.example.com"><span class="prompt">$ </span>ansible-playbook -i hosts ansible/bootstrap.yml -l droplets \<br>&nbsp;&nbsp;-e admin_user=szewong \<br>&nbsp;&nbsp;-e domain=teams.example.com<button class="copy-icon" aria-label="Copy to clipboard"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg></button></div>
+                </div>
+            </div>
+            <div class="do-step">
+                <div class="do-step-number">2</div>
+                <div>
+                    <div class="step-label">Once OpenClaw is installed on each host</div>
+                    <h3>Deploy your team</h3>
+                    <p>Runs the team's <code>setup.sh</code> as the <code>openclaw</code> user on every host, applies the systemd workaround, and reloads the gateway. Pass <code>-e anthropic_api_key=…</code> to set the key in one shot.</p>
+                    <div class="step-command" onclick="copyCommand(this)" data-copy="ansible-playbook -i hosts ansible/openclaw-team.yml -l droplets -e team=operator -e anthropic_api_key=sk-ant-..."><span class="prompt">$ </span>ansible-playbook -i hosts ansible/openclaw-team.yml -l droplets \<br>&nbsp;&nbsp;-e team=operator \<br>&nbsp;&nbsp;-e anthropic_api_key=sk-ant-...<button class="copy-icon" aria-label="Copy to clipboard"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg></button></div>
+                </div>
+            </div>
+        </div>
+
         <p class="section-subtitle" style="margin-top: 2.5rem;">
+            Playbook source and variable reference in
+            <a href="https://github.com/zenithventure/openclaw-agent-teams/tree/main/ansible">ansible/</a>.
             Need secrets out of <code>.env</code> or periodic state backups? See
             <a href="https://github.com/zenithventure/openclaw-agent-teams/blob/main/docs/advanced.md">Advanced setup</a>.
         </p>
