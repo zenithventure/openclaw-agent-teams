@@ -259,8 +259,11 @@ configure_api_key() {
 
 clone_repo
 run_team_setup
-patch_service
+# Write the API key before patch_service so the gateway picks it up
+# on its first (re)start. Otherwise it would boot without the key and
+# never be restarted again in this run.
 configure_api_key
+patch_service
 
 # ============================================================
 # Summary
