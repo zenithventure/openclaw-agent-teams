@@ -1,0 +1,107 @@
+---
+# Ansible port of install-team.sh + the team's setup.sh.
+#
+# Deploys a team into ~/.openclaw on a host that already has OpenClaw
+# installed (run after `openclaw install.sh | bash` has been executed
+# as the openclaw user).
+#
+# Usage:
+#   ansible-playbook -i hosts ansible/openclaw-team.yml -l droplets \
+#     -e team=operator -e anthropic_api_key=sk-ant-...
+#
+# Variables:
+#   team               — required: accountant|modernizer|operator|product-builder|real-estate|recruiter
+#   anthropic_api_key  — optional; sets ANTHROPIC_API_KEY in ~/.openclaw/.env
+- hosts: all
+  become: true
+  become_user: openclaw
+  gather_facts: true
+
+  vars:
+    openclaw_dir: "/home/openclaw/.openclaw"
+    repo_root: "{{ playbook_dir }}/.."
+    valid_teams:
+      - accountant
+      - modernizer
+      - operator
+      - product-builder
+      - real-estate
+      - recruiter
+
+  pre_tasks:
+    - name: Ensure team is set and valid
+      ansible.builtin.assert:
+        that:
+          - team is defined
+          - team in valid_teams
+        fail_msg: >-
+          team must be one of: {{ valid_teams | join(', ') }}
+
+  tasks:
+    - name: Run the team's setup.sh (handles JSON merge, workspaces, skills)
+      ansible.builtin.shell: "bash {{ repo_root }}/{{ team }}/setup.sh"
+      environment:
+        HOME: /home/openclaw
+        OPENCLAW_DIR: "{{ openclaw_dir }}"
+      changed_when: true
+
+    - name: Set ANTHROPIC_API_KEY in .env (if provided)
+      ansible.builtin.lineinfile:
+        path: "{{ openclaw_dir }}/.env"
+        regexp: '^#?\s*ANTHROPIC_API_KEY='
+        line: "ANTHROPIC_API_KEY={{ anthropic_api_key }}"
+        create: true
+        mode: '0600'
+      when: anthropic_api_key is defined and anthropic_api_key | length > 0
+
+    # ── OpenClaw 3.2 systemd workaround (matches install-team.sh::patch_service) ──
+    - name: Patch Telegram groupPolicy to "open"
+      ansible.builtin.replace:
+        path: "{{ openclaw_dir }}/openclaw.json"
+        regexp: '"groupPolicy": "allowlist"'
+        replace: '"groupPolicy": "open"'
+      failed_when: false
+
+    - name: Ensure user systemd directory exists
+      ansible.builtin.file:
+        path: /home/openclaw/.config/systemd/user
+        state: directory
+        mode: '0755'
+
+    - name: Stat the gateway unit file
+      ansible.builtin.stat:
+        path: /home/openclaw/.config/systemd/user/openclaw-gateway.service
+      register: gateway_unit
+
+    - name: Write stub gateway unit (first install only)
+      ansible.builtin.copy:
+        dest: /home/openclaw/.config/systemd/user/openclaw-gateway.service
+        mode: '0644'
+        content: |
+          [Unit]
+          Description=OpenClaw Gateway
+          After=network.target
+
+          [Service]
+          Type=simple
+          ExecStart=/home/openclaw/.npm-global/bin/openclaw gateway start
+          Restart=on-failure
+          RestartSec=5
+
+          [Install]
+          WantedBy=default.target
+      when: not gateway_unit.stat.exists
+
+    - name: Reload + (re)start the gateway
+      ansible.builtin.shell: |
+        XDG_RUNTIME_DIR=/run/user/$(id -u) systemctl --user daemon-reload
+        XDG_RUNTIME_DIR=/run/user/$(id -u) systemctl --user enable openclaw-gateway.service || true
+        XDG_RUNTIME_DIR=/run/user/$(id -u) systemctl --user reload-or-restart openclaw-gateway.service
+      changed_when: true
+
+    - name: Let openclaw rewrite the unit file (first install only)
+      ansible.builtin.shell: |
+        XDG_RUNTIME_DIR=/run/user/$(id -u) /home/openclaw/.npm-global/bin/openclaw gateway install --force
+      when: not gateway_unit.stat.exists
+      changed_when: true
+      failed_when: false

@@ -256,32 +256,35 @@ log_step "[2/3] Preparing OpenClaw environment..."
 
 OPENCLAW_HOME="/home/openclaw"
 
-# ── Create openclaw user ──────────────────────────────────
-create_openclaw_user() {
-    log_step "  Creating openclaw user..."
+# ── Create systemd-ready user (idempotent) ─────────────────
+# Creates the user if missing, enables lingering so user services
+# survive logout, ensures the per-UID runtime dir exists, starts the
+# user@<UID> session, and seeds PATH/XDG_RUNTIME_DIR/DBUS_SESSION_BUS_ADDRESS
+# into .profile (login shells) and .bashrc (interactive shells).
+create_systemd_user() {
+    local user="$1"
+    local home="$2"
 
-    if id openclaw &>/dev/null; then
-        log_ok "User openclaw already exists"
+    log_step "  Creating ${user} user..."
+
+    if id "$user" &>/dev/null; then
+        log_ok "User ${user} already exists"
     else
-        useradd --create-home --home-dir "$OPENCLAW_HOME" --shell /bin/bash openclaw
-        log_ok "Created user: openclaw"
+        useradd --create-home --home-dir "$home" --shell /bin/bash "$user"
+        log_ok "Created user: ${user}"
     fi
 
-    # Enable lingering so systemd user services survive logout
-    loginctl enable-linger openclaw
-    OPENCLAW_UID=$(id -u openclaw)
-    mkdir -p "/run/user/${OPENCLAW_UID}"
-    chown openclaw:openclaw "/run/user/${OPENCLAW_UID}"
-    chmod 700 "/run/user/${OPENCLAW_UID}"
-    systemctl start "user@${OPENCLAW_UID}.service"
+    loginctl enable-linger "$user"
+    local uid
+    uid=$(id -u "$user")
+    mkdir -p "/run/user/${uid}"
+    chown "${user}:${user}" "/run/user/${uid}"
+    chmod 700 "/run/user/${uid}"
+    systemctl start "user@${uid}.service"
     log_ok "Lingering enabled, systemd user session started"
 
-    # Ensure npm global bin, XDG_RUNTIME_DIR, and DBUS_SESSION_BUS_ADDRESS
-    # are set for all shell types (login, interactive, and non-interactive).
-    # .profile is sourced by login shells; .bashrc by interactive shells.
-    local profile="${OPENCLAW_HOME}/.profile"
-    local bashrc="${OPENCLAW_HOME}/.bashrc"
-    for rc in "$profile" "$bashrc"; do
+    local rc
+    for rc in "${home}/.profile" "${home}/.bashrc"; do
         if ! grep -q '.npm-global/bin' "$rc" 2>/dev/null; then
             echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$rc"
         fi
@@ -291,48 +294,7 @@ create_openclaw_user() {
         if ! grep -q 'DBUS_SESSION_BUS_ADDRESS' "$rc" 2>/dev/null; then
             echo 'export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"' >> "$rc"
         fi
-        chown openclaw:openclaw "$rc"
-    done
-}
-
-# ── Create claude user ───────────────────────────────────
-create_claude_user() {
-    log_step "  Creating claude user..."
-
-    local CLAUDE_HOME="/home/claude"
-
-    if id claude &>/dev/null; then
-        log_ok "User claude already exists"
-    else
-        useradd --create-home --home-dir "$CLAUDE_HOME" --shell /bin/bash claude
-        log_ok "Created user: claude"
-    fi
-
-    # Enable lingering so systemd user services survive logout
-    loginctl enable-linger claude
-    local CLAUDE_UID
-    CLAUDE_UID=$(id -u claude)
-    mkdir -p "/run/user/${CLAUDE_UID}"
-    chown claude:claude "/run/user/${CLAUDE_UID}"
-    chmod 700 "/run/user/${CLAUDE_UID}"
-    systemctl start "user@${CLAUDE_UID}.service"
-    log_ok "Lingering enabled, systemd user session started"
-
-    # Ensure npm global bin, XDG_RUNTIME_DIR, and DBUS_SESSION_BUS_ADDRESS
-    # are set for all shell types (login, interactive, and non-interactive).
-    local profile="${CLAUDE_HOME}/.profile"
-    local bashrc="${CLAUDE_HOME}/.bashrc"
-    for rc in "$profile" "$bashrc"; do
-        if ! grep -q '.npm-global/bin' "$rc" 2>/dev/null; then
-            echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$rc"
-        fi
-        if ! grep -q 'XDG_RUNTIME_DIR' "$rc" 2>/dev/null; then
-            echo 'export XDG_RUNTIME_DIR="/run/user/$(id -u)"' >> "$rc"
-        fi
-        if ! grep -q 'DBUS_SESSION_BUS_ADDRESS' "$rc" 2>/dev/null; then
-            echo 'export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"' >> "$rc"
-        fi
-        chown claude:claude "$rc"
+        chown "${user}:${user}" "$rc"
     done
 }
 
@@ -361,8 +323,8 @@ install_nodejs() {
     log_ok "Node.js $(node --version) installed"
 }
 
-create_openclaw_user
-create_claude_user
+create_systemd_user openclaw "$OPENCLAW_HOME"
+create_systemd_user claude   /home/claude
 install_nodejs
 
 log_ok "Phase 2 complete — openclaw user and Node.js ready"
