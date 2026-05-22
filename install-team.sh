@@ -98,7 +98,7 @@ done
 
 # ── Validate ───────────────────────────────────────────────
 
-VALID_TEAMS="product-builder accountant recruiter real-estate modernizer operator"
+VALID_TEAMS="product-builder accountant recruiter real-estate modernizer operator dev"
 
 if [[ -z "$TEAM" ]]; then
     log_err "--team is required"
