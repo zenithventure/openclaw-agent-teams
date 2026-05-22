@@ -406,10 +406,16 @@ copy_shared_files() {
         log_ok "STANDARDS.md"
     fi
 
-    # Copy BOOTSTRAP.md
+    # Copy BOOTSTRAP.md — seed-once with sentinel so the agent can self-delete it
     if [[ -f "${SCRIPT_DIR}/shared/BOOTSTRAP.md" ]]; then
-        cp "${SCRIPT_DIR}/shared/BOOTSTRAP.md" "${shared_dir}/BOOTSTRAP.md"
-        log_ok "BOOTSTRAP.md"
+        local sentinel="${shared_dir}/.bootstrap-deployed"
+        if [[ ! -f "${shared_dir}/BOOTSTRAP.md" && ! -f "${sentinel}" ]]; then
+            cp "${SCRIPT_DIR}/shared/BOOTSTRAP.md" "${shared_dir}/BOOTSTRAP.md"
+            touch "${sentinel}"
+            log_ok "BOOTSTRAP.md (first install)"
+        else
+            log_ok "BOOTSTRAP.md skipped (sentinel present)"
+        fi
     fi
 
     # Copy workflow.yml

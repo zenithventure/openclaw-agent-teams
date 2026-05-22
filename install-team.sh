@@ -175,6 +175,61 @@ run_team_setup() {
     log_ok "Team setup complete"
 }
 
+# ── Patch OpenClaw 3.2 systemd / config quirks ─────────────
+# Mirrors the deprecated service-patch.sh: ensures a user-mode
+# openclaw-gateway.service exists, flips the Telegram groupPolicy
+# default, then reloads the unit. Idempotent and safe to re-run.
+patch_service() {
+    log_step "  Applying OpenClaw 3.2 systemd workaround..."
+
+    local config="${OPENCLAW_DIR}/openclaw.json"
+    if [[ -f "$config" ]]; then
+        if grep -q '"groupPolicy": "allowlist"' "$config"; then
+            sed -i 's/"groupPolicy": "allowlist"/"groupPolicy": "open"/' "$config"
+            log_ok "Patched groupPolicy → open in openclaw.json"
+        fi
+    fi
+
+    local unit="${HOME}/.config/systemd/user/openclaw-gateway.service"
+    local unit_existed=true
+    if [[ ! -f "$unit" ]]; then
+        unit_existed=false
+        local openclaw_bin
+        openclaw_bin="$(command -v openclaw || echo "${HOME}/.npm-global/bin/openclaw")"
+        mkdir -p "$(dirname "$unit")"
+        cat > "$unit" << EOF
+[Unit]
+Description=OpenClaw Gateway
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=${openclaw_bin} gateway start
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+EOF
+        log_ok "Wrote stub unit: ${unit}"
+    fi
+
+    XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+    export XDG_RUNTIME_DIR
+    systemctl --user daemon-reload
+    systemctl --user enable openclaw-gateway.service >/dev/null 2>&1 || true
+
+    # Let openclaw rewrite the unit properly only on first install
+    if [[ "$unit_existed" == false ]]; then
+        systemctl --user start openclaw-gateway.service || true
+        sleep 3
+        openclaw gateway install --force >/dev/null 2>&1 || true
+    fi
+
+    systemctl --user reload-or-restart openclaw-gateway.service
+    log_ok "Gateway reloaded"
+}
+
 # ── Configure API key ──────────────────────────────────────
 configure_api_key() {
     if [[ -n "$API_KEY" ]]; then
@@ -204,7 +259,11 @@ configure_api_key() {
 
 clone_repo
 run_team_setup
+# Write the API key before patch_service so the gateway picks it up
+# on its first (re)start. Otherwise it would boot without the key and
+# never be restarted again in this run.
 configure_api_key
+patch_service
 
 # ============================================================
 # Summary
@@ -217,6 +276,8 @@ echo -e "${BOLD}╚════════════════════�
 echo ""
 echo -e "${BOLD}What was done:${NC}"
 echo -e "  ${GREEN}✓${NC} Team deployed: ${BOLD}${TEAM}${NC}"
+echo -e "  ${GREEN}✓${NC} OpenClaw 3.2 systemd workaround applied"
+echo -e "  ${GREEN}✓${NC} Gateway reloaded"
 if [[ -n "$API_KEY" ]]; then
     echo -e "  ${GREEN}✓${NC} API key configured"
 else
@@ -225,10 +286,7 @@ fi
 echo ""
 echo -e "${BOLD}Next steps:${NC}"
 echo ""
-echo -e "  1. ${YELLOW}Start the gateway:${NC}"
-echo -e "     openclaw gateway start"
-echo ""
-echo -e "  2. ${YELLOW}Edit your vision:${NC}"
+echo -e "  1. ${YELLOW}Edit your vision:${NC}"
 echo -e "     nano ${OPENCLAW_DIR}/shared/VISION.md"
 echo ""
 echo -e "  ${DIM}•${NC} Service management:"

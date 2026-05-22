@@ -292,12 +292,16 @@ deploy_agent_files() {
         local workspace="${OPENCLAW_DIR}/workspace-${agent}"
         local source="${SCRIPT_DIR}/agents/${agent}"
 
-        # Copy all agent files
-        for file in SOUL.md IDENTITY.md AGENTS.md HEARTBEAT.md USER.md; do
+        # Declarative files: always refresh
+        for file in SOUL.md IDENTITY.md AGENTS.md HEARTBEAT.md; do
             if [[ -f "${source}/${file}" ]]; then
                 cp "${source}/${file}" "${workspace}/${file}"
             fi
         done
+        # USER.md: seed-once so customizations (timezone, channel, name) survive re-install
+        if [[ ! -f "${workspace}/USER.md" && -f "${source}/USER.md" ]]; then
+            cp "${source}/USER.md" "${workspace}/USER.md"
+        fi
 
         # Create symlink to shared workspace
         ln -sfn "${OPENCLAW_DIR}/shared" "${workspace}/shared"
@@ -316,12 +320,21 @@ deploy_shared_files() {
     cp "${SCRIPT_DIR}/shared/VISION.md"      "${OPENCLAW_DIR}/shared/VISION.md"
     cp "${SCRIPT_DIR}/shared/standup-log.md"  "${OPENCLAW_DIR}/shared/standup-log.md"
     cp "${SCRIPT_DIR}/shared/STANDARDS.md"    "${OPENCLAW_DIR}/shared/STANDARDS.md"
-    cp "${SCRIPT_DIR}/shared/BOOTSTRAP.md"    "${OPENCLAW_DIR}/shared/BOOTSTRAP.md"
+
+    # BOOTSTRAP.md: drop only if neither the file nor the sentinel exists.
+    # Agent self-deletes it on first run; sentinel prevents re-drop.
+    local sentinel="${OPENCLAW_DIR}/shared/.bootstrap-deployed"
+    if [[ ! -f "${OPENCLAW_DIR}/shared/BOOTSTRAP.md" && ! -f "${sentinel}" ]]; then
+        cp "${SCRIPT_DIR}/shared/BOOTSTRAP.md" "${OPENCLAW_DIR}/shared/BOOTSTRAP.md"
+        touch "${sentinel}"
+        log_ok "BOOTSTRAP.md (first install)"
+    else
+        log_ok "BOOTSTRAP.md skipped (sentinel present)"
+    fi
 
     log_ok "VISION.md"
     log_ok "standup-log.md"
     log_ok "STANDARDS.md"
-    log_ok "BOOTSTRAP.md"
 }
 
 # ── Deploy Skills ─────────────────────────────────────────

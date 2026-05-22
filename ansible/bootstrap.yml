@@ -1,0 +1,203 @@
+---
+# Ansible port of bootstrap.sh
+#
+# Hardens a fresh Ubuntu 24.04 droplet, creates the openclaw and claude
+# users with systemd lingering and shell env exports, installs Node.js 22,
+# and provisions Caddy as a TLS reverse proxy for the OpenClaw gateway.
+#
+# Usage:
+#   ansible-playbook -i hosts ansible/bootstrap.yml -l droplets \
+#     -e admin_user=szewong -e domain=teams.example.com
+#
+# Variables (all optional):
+#   admin_user   — admin SSH username
+#   ssh_key      — admin SSH public key
+#   domain       — Let's Encrypt domain (omit for self-signed)
+- hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    admin_user: "{{ lookup('env', 'USER') | default('zuser-' + 9999 | random | string, true) }}"
+    ssh_key: ""
+    domain: ""
+    systemd_users:
+      - { name: openclaw, home: /home/openclaw }
+      - { name: claude,   home: /home/claude   }
+
+  tasks:
+    # ── Phase 1: Hardening ───────────────────────────────────
+    - name: Wait for any running apt/dpkg locks
+      ansible.builtin.shell: |
+        while fuser /var/lib/dpkg/lock-frontend &>/dev/null 2>&1; do sleep 5; done
+      changed_when: false
+
+    - name: Install system packages
+      ansible.builtin.apt:
+        name:
+          - curl
+          - vim
+          - git
+          - ufw
+          - build-essential
+          - python3
+          - jq
+          - fail2ban
+          - ca-certificates
+          - gnupg
+        update_cache: true
+
+    - name: Create admin user
+      ansible.builtin.user:
+        name: "{{ admin_user }}"
+        shell: /bin/bash
+        groups: sudo
+        append: true
+        create_home: true
+
+    - name: Configure passwordless sudo
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/sudo-nopasswd
+        mode: '0440'
+        content: "{{ admin_user }} ALL=(ALL) NOPASSWD:ALL\n"
+
+    - name: Install SSH key for admin user
+      ansible.posix.authorized_key:
+        user: "{{ admin_user }}"
+        key: "{{ ssh_key }}"
+      when: ssh_key | length > 0
+
+    - name: Copy root's authorized_keys to admin user (DO-injected fallback)
+      ansible.builtin.copy:
+        src: /root/.ssh/authorized_keys
+        dest: "/home/{{ admin_user }}/.ssh/authorized_keys"
+        remote_src: true
+        mode: '0600'
+        owner: "{{ admin_user }}"
+        group: "{{ admin_user }}"
+      when: ssh_key | length == 0
+
+    - name: Harden SSH (key-only root, no password auth)
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "{{ item.regex }}"
+        line: "{{ item.line }}"
+      loop:
+        - { regex: '^#?PermitRootLogin.*',       line: 'PermitRootLogin prohibit-password' }
+        - { regex: '^#?PasswordAuthentication.*', line: 'PasswordAuthentication no' }
+      notify: restart ssh
+
+    - name: Configure UFW (22, 80, 443 only)
+      community.general.ufw:
+        state: enabled
+        policy: deny
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop: [22, 80, 443]
+
+    - name: Enable fail2ban
+      ansible.builtin.systemd:
+        name: fail2ban
+        enabled: true
+        state: started
+
+    - name: Add 2 GB swap on low-memory droplets
+      ansible.builtin.shell: |
+        if ! swapon --show | grep -q /swapfile; then
+          fallocate -l 2G /swapfile
+          chmod 600 /swapfile
+          mkswap /swapfile
+          swapon /swapfile
+          echo '/swapfile none swap sw 0 0' >> /etc/fstab
+        fi
+      args:
+        creates: /swapfile
+
+    # ── Phase 2: OpenClaw prep ───────────────────────────────
+    - name: Create systemd-ready users (openclaw, claude)
+      ansible.builtin.user:
+        name: "{{ item.name }}"
+        home: "{{ item.home }}"
+        shell: /bin/bash
+        create_home: true
+      loop: "{{ systemd_users }}"
+
+    - name: Enable lingering for systemd user services
+      ansible.builtin.command: "loginctl enable-linger {{ item.name }}"
+      args:
+        creates: "/var/lib/systemd/linger/{{ item.name }}"
+      loop: "{{ systemd_users }}"
+
+    - name: Seed env exports into .profile and .bashrc
+      ansible.builtin.blockinfile:
+        path: "{{ item.0.home }}/{{ item.1 }}"
+        marker: "# {mark} ANSIBLE MANAGED — openclaw env"
+        create: true
+        owner: "{{ item.0.name }}"
+        group: "{{ item.0.name }}"
+        mode: '0644'
+        block: |
+          export PATH="$HOME/.npm-global/bin:$PATH"
+          export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+          export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
+      loop: "{{ systemd_users | product(['.profile', '.bashrc']) | list }}"
+
+    - name: Install Node.js 22 (NodeSource APT repo)
+      ansible.builtin.shell: |
+        mkdir -p /etc/apt/keyrings
+        curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
+          | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg --yes
+        echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" \
+          > /etc/apt/sources.list.d/nodesource.list
+        apt-get update -qq
+        apt-get install -y -qq nodejs
+      args:
+        creates: /usr/bin/node
+
+    # ── Phase 3: Caddy reverse proxy ─────────────────────────
+    - name: Install Caddy APT repo + package
+      ansible.builtin.shell: |
+        apt-get install -y -qq debian-keyring debian-archive-keyring apt-transport-https
+        curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \
+          | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg --yes
+        curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' \
+          > /etc/apt/sources.list.d/caddy-stable.list
+        apt-get update -qq
+        apt-get install -y -qq caddy
+      args:
+        creates: /usr/bin/caddy
+
+    - name: Write Caddyfile (domain mode — Let's Encrypt)
+      ansible.builtin.copy:
+        dest: /etc/caddy/Caddyfile
+        mode: '0644'
+        content: |
+          {{ domain }} {
+              reverse_proxy 127.0.0.1:18789
+          }
+      when: domain | length > 0
+      notify: restart caddy
+
+    - name: Write Caddyfile (IP mode — self-signed)
+      ansible.builtin.copy:
+        dest: /etc/caddy/Caddyfile
+        mode: '0644'
+        content: |
+          https://{{ ansible_default_ipv4.address }} {
+              tls internal
+              reverse_proxy 127.0.0.1:18789
+          }
+      when: domain | length == 0
+      notify: restart caddy
+
+  handlers:
+    - name: restart ssh
+      ansible.builtin.systemd:
+        name: ssh
+        state: restarted
+
+    - name: restart caddy
+      ansible.builtin.systemd:
+        name: caddy
+        state: restarted
