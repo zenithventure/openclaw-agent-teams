@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OpenClaw Agent Teams — Production-Ready AI Agent Teams</title>
-    <meta name="description" content="Deploy multi-agent AI teams in one command. Six ready-to-run team configurations for OpenClaw — locally or on DigitalOcean with full TLS and server hardening.">
+    <meta name="description" content="Deploy multi-agent AI teams in one command. Seven ready-to-run team configurations for OpenClaw — locally on macOS/Linux or on DigitalOcean with full TLS and server hardening.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -374,6 +374,469 @@
             margin-top: 0.75rem;
         }
 
+        /* Anchor nav links inside the top bar */
+        .nav-anchors {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-right: 1.25rem;
+        }
+
+        .nav-anchors a {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 500;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+
+        .nav-anchors a:hover {
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 720px) {
+            .nav-anchors { display: none; }
+        }
+
+        /* Prereqs strip */
+        .prereqs {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 2rem 4rem;
+        }
+
+        .prereqs-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-left: 3px solid var(--accent-green);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 1.25rem;
+            align-items: start;
+        }
+
+        .prereqs-card .prereqs-label {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent-green);
+            padding-top: 0.15rem;
+            white-space: nowrap;
+        }
+
+        .prereqs-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 0.6rem 1.5rem;
+        }
+
+        .prereqs-card li {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .prereqs-card li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.5rem;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-green);
+        }
+
+        .prereqs-card li a {
+            color: var(--accent-green);
+            text-decoration: none;
+            border-bottom: 1px dotted rgba(34, 197, 94, 0.4);
+        }
+
+        .prereqs-card li a:hover {
+            border-bottom-style: solid;
+        }
+
+        @media (max-width: 720px) {
+            .prereqs-card { grid-template-columns: 1fr; }
+        }
+
+        /* Choose your path */
+        .paths {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2rem 6rem;
+        }
+
+        .paths-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .path-card {
+            display: block;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem 1.75rem;
+            text-decoration: none;
+            color: var(--text-primary);
+            position: relative;
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .path-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(34, 197, 94, 0.4);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+        }
+
+        .path-card .path-eyebrow {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--accent-green);
+            margin-bottom: 0.5rem;
+        }
+
+        .path-card h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.6rem;
+        }
+
+        .path-card p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1.25rem;
+        }
+
+        .path-card .path-meta {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .path-card .path-arrow {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            color: var(--text-muted);
+            transition: color 0.2s, transform 0.2s;
+        }
+
+        .path-card:hover .path-arrow {
+            color: var(--accent-green);
+            transform: translate(3px, -3px);
+        }
+
+        .path-card.recommended {
+            border-color: rgba(34, 197, 94, 0.3);
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.04) 0%, var(--bg-card) 60%);
+        }
+
+        .path-card.recommended .path-eyebrow::after {
+            content: '· recommended';
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-left: 0.35rem;
+        }
+
+        @media (max-width: 860px) {
+            .paths-grid { grid-template-columns: 1fr; }
+        }
+
+        /* "Which team?" cheat sheet (above teams grid) */
+        .team-picker {
+            max-width: 960px;
+            margin: 0 auto 2.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+        }
+
+        .team-picker h4 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .team-picker ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 0.5rem 1.5rem;
+        }
+
+        .team-picker li {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .team-picker li strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .team-picker li code {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.78rem;
+            background: var(--bg-primary);
+            color: var(--accent-green);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        /* Per-team-card install button (replaces the static --team flag) */
+        .team-card-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .team-card-install {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.72rem;
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+
+        .team-card-install:hover {
+            border-color: rgba(34, 197, 94, 0.4);
+            color: var(--text-primary);
+        }
+
+        .team-card-install.copied {
+            color: var(--accent-green);
+            border-color: rgba(34, 197, 94, 0.4);
+        }
+
+        .team-card-source {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+
+        .team-card-source:hover {
+            color: var(--accent-green);
+        }
+
+        /* Running preview (sample standup log) */
+        .running-preview {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 5rem 2rem;
+        }
+
+        .preview-window {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 2rem;
+        }
+
+        .preview-titlebar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .preview-titlebar .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .preview-titlebar .dot.r { background: #ef4444; }
+        .preview-titlebar .dot.y { background: #eab308; }
+        .preview-titlebar .dot.g { background: #22c55e; }
+
+        .preview-titlebar .preview-path {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .preview-body {
+            padding: 1.5rem 1.75rem;
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.82rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+        }
+
+        .preview-body .agent-r { color: var(--disc-red); font-weight: 600; }
+        .preview-body .agent-y { color: var(--disc-yellow); font-weight: 600; }
+        .preview-body .agent-g { color: var(--disc-green); font-weight: 600; }
+        .preview-body .agent-b { color: var(--disc-blue); font-weight: 600; }
+        .preview-body .tag-decision { color: var(--accent-green); }
+        .preview-body .tag-blocker { color: #ef4444; }
+
+        /* Ansible setup expandable inside do-banner */
+        details.ansible-setup {
+            margin-top: 1.25rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        details.ansible-setup summary {
+            cursor: pointer;
+            list-style: none;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--accent-green);
+            padding: 0.5rem 0;
+            transition: color 0.15s;
+        }
+
+        details.ansible-setup summary::-webkit-details-marker {
+            display: none;
+        }
+
+        details.ansible-setup summary:hover {
+            color: var(--text-primary);
+        }
+
+        details.ansible-setup[open] summary {
+            margin-bottom: 1rem;
+        }
+
+        .ansible-setup-body {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.65;
+        }
+
+        .ansible-setup-body h4 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .ansible-setup-body p {
+            margin-bottom: 0.75rem;
+        }
+
+        .ansible-setup-body code {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.82rem;
+            background: var(--bg-primary);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            color: var(--accent-green);
+        }
+
+        .ansible-setup-body .step-command {
+            margin-top: 0.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .ansible-setup-body a {
+            color: var(--accent-green);
+            text-decoration: none;
+            border-bottom: 1px dotted rgba(34, 197, 94, 0.4);
+        }
+
+        .ansible-setup-body a:hover {
+            border-bottom-style: solid;
+        }
+
+        .inventory-snippet {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.82rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            color: var(--text-secondary);
+            white-space: pre;
+            overflow-x: auto;
+            line-height: 1.7;
+            margin: 0.75rem 0;
+        }
+
+        /* Collapsible structure section */
+        details.structure-details {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        details.structure-details summary {
+            cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 1rem;
+            list-style: none;
+            transition: color 0.15s;
+        }
+
+        details.structure-details summary::-webkit-details-marker {
+            display: none;
+        }
+
+        details.structure-details summary:hover {
+            color: var(--text-primary);
+        }
+
+        details.structure-details summary::after {
+            content: ' ▾';
+            color: var(--text-muted);
+        }
+
+        details.structure-details[open] summary::after {
+            content: ' ▴';
+        }
+
         /* DigitalOcean Deploy */
         .do-deploy {
             padding: 6rem 2rem;
@@ -699,34 +1162,95 @@
             <span class="nav-divider">/</span>
             <span class="nav-title">Agent Teams</span>
         </div>
-        <a class="nav-link" href="https://github.com/zenithventure/openclaw-agent-teams">GitHub</a>
+        <div style="display:flex; align-items:center;">
+            <div class="nav-anchors">
+                <a href="#paths">Get started</a>
+                <a href="#teams">Teams</a>
+                <a href="#digitalocean">Deploy</a>
+                <a href="#preview">Preview</a>
+            </div>
+            <a class="nav-link" href="https://github.com/zenithventure/openclaw-agent-teams">GitHub</a>
+        </div>
     </nav>
 
     <section class="hero">
         <div class="hero-badge">
-            Open source &middot; 6 ready-to-deploy teams
+            Open source &middot; 7 ready-to-deploy teams &middot; 4 agents each
         </div>
         <h1>
             <span class="gradient-text">AI Agent Teams</span>
             for OpenClaw
         </h1>
         <p class="hero-sub">
-            Production-ready multi-agent team configurations. Each team ships with agents, skills, shared context, and a one-line installer &mdash; deploy locally or to DigitalOcean.
+            Production-ready multi-agent team configurations. Each team ships with agents, skills, shared context, and a one-line installer &mdash; deploy locally on macOS/Linux, to a DigitalOcean droplet, or as a fleet via Ansible.
         </p>
-        <div class="hero-command" onclick="copyCommand(this)" data-copy="git clone https://github.com/zenithventure/openclaw-agent-teams.git /tmp/openclaw-teams && bash /tmp/openclaw-teams/operator/setup.sh">
-            <div class="hero-command-label">Quick start</div>
-            <div class="hero-command-text"><span class="prompt">$ </span>git clone https://github.com/zenithventure/openclaw-agent-teams.git /tmp/openclaw-teams \<br>&nbsp;&nbsp;&& bash /tmp/openclaw-teams/operator/setup.sh</div>
-            <button class="copy-icon" aria-label="Copy to clipboard"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg></button>
-        </div>
-        <p class="hero-arrow">Replace "operator" with any team name. Edit VISION.md, set your API key, and run openclaw start.</p>
-        <a class="hero-cta" href="https://github.com/zenithventure/openclaw-agent-teams">View on GitHub</a>
+        <p class="hero-arrow" style="margin-bottom: 1.25rem;">Free &middot; you bring an Anthropic API key &middot; ~5 minutes to first agent</p>
+        <a class="hero-cta" href="#paths">Choose your install path ↓</a>
     </section>
 
-    <section class="teams">
+    <section class="prereqs" id="prereqs">
+        <div class="prereqs-card">
+            <div class="prereqs-label">Before you start</div>
+            <ul>
+                <li>An <a href="https://console.anthropic.com" target="_blank" rel="noopener">Anthropic API key</a> (free signup; billed per token used).</li>
+                <li>One of: a fresh Ubuntu 24.04 droplet, a local Ubuntu/Debian machine, or macOS with Homebrew.</li>
+                <li><strong>Node.js 22+</strong> — bootstrap.sh installs it on droplets; on macOS use <code>brew install node@22</code>.</li>
+                <li>(Optional) <a href="https://github.com" target="_blank" rel="noopener">GitHub account</a> for the Dev team's PR workflow.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="paths" id="paths">
+        <h2 class="section-heading">Choose your install path</h2>
+        <p class="section-subtitle">Three supported paths. Pick the one that matches where you want the team to run.</p>
+        <div class="paths-grid">
+            <a class="path-card" href="#local">
+                <span class="path-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
+                </span>
+                <div class="path-eyebrow">Local</div>
+                <h3>macOS or Linux laptop</h3>
+                <p>You already have OpenClaw installed (or want to install it locally). Run a team's <code>setup.sh</code> directly and you're done. Best for trying it out.</p>
+                <div class="path-meta">~3 min · no server needed</div>
+            </a>
+            <a class="path-card recommended" href="#digitalocean">
+                <span class="path-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
+                </span>
+                <div class="path-eyebrow">DigitalOcean</div>
+                <h3>One droplet, TLS, hardened</h3>
+                <p>Bootstrap a fresh Ubuntu 24.04 droplet: hardening, Node.js, Caddy with Let's Encrypt, then deploy your team. Three commands.</p>
+                <div class="path-meta">~5 min · ~$6/mo droplet</div>
+            </a>
+            <a class="path-card" href="#ansible">
+                <span class="path-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
+                </span>
+                <div class="path-eyebrow">Fleet</div>
+                <h3>Many droplets via Ansible</h3>
+                <p>Declarative inventory, repeatable rebuilds. Two playbooks mirror the shell flow so every host ends up in the same state.</p>
+                <div class="path-meta">Requires Ansible 2.14+</div>
+            </a>
+        </div>
+    </section>
+
+    <section class="teams" id="teams">
         <h2 class="section-heading">Teams</h2>
-        <p class="section-subtitle">Six self-contained teams, each built around the DISC personality model with four specialized agents.</p>
+        <p class="section-subtitle">Seven self-contained teams, each with four agents mapped to the <strong>DISC</strong> behavioral model — <span style="color: var(--disc-red)">Red</span> leads, <span style="color: var(--disc-yellow)">Yellow</span> creates, <span style="color: var(--disc-green)">Green</span> operates, <span style="color: var(--disc-blue)">Blue</span> reviews.</p>
+        <div class="team-picker">
+            <h4>Which team?</h4>
+            <ul>
+                <li><strong>Running a business</strong> end-to-end → <code>operator</code></li>
+                <li><strong>Shipping a product</strong> spec-first → <code>product-builder</code></li>
+                <li><strong>Ship GitHub issues autonomously</strong> via Claude Code → <code>dev</code></li>
+                <li><strong>Modernizing a legacy app</strong> with compliance → <code>modernizer</code></li>
+                <li><strong>Back-office accounting</strong> → <code>accountant</code></li>
+                <li><strong>Hiring / recruiting</strong> pipeline → <code>recruiter</code></li>
+                <li><strong>Real-estate deal desk</strong> → <code>real-estate</code></li>
+            </ul>
+        </div>
         <div class="teams-grid">
-            <a class="team-card" href="https://github.com/zenithventure/openclaw-agent-teams/tree/main/operator">
+            <div class="team-card">
                 <div class="team-card-header">
                     <div class="team-card-icon">&#x1f3af;</div>
                     <h3>Operator</h3>
@@ -738,9 +1262,12 @@
                     <span class="agent-tag green">Anchor</span>
                     <span class="agent-tag blue">Lens</span>
                 </div>
-                <div class="team-card-flag">--team operator</div>
-            </a>
-            <a class="team-card" href="https://github.com/zenithventure/openclaw-agent-teams/tree/main/product-builder">
+                <div class="team-card-actions">
+                    <a class="team-card-source" href="https://github.com/zenithventure/openclaw-agent-teams/tree/main/operator">View source ↗</a>
+                    <button class="team-card-install" onclick="copyInstallCmd(this)" data-team="operator" aria-label="Copy install command">Copy install</button>
+                </div>
+            </div>
+            <div class="team-card">
                 <div class="team-card-header">
                     <div class="team-card-icon">&#x1f528;</div>
                     <h3>Product Builder</h3>
@@ -752,9 +1279,12 @@
                     <span class="agent-tag green">Ops</span>
                     <span class="agent-tag blue">QA</span>
                 </div>
-                <div class="team-card-flag">--team product-builder</div>
-            </a>
-            <a class="team-card" href="https://github.com/zenithventure/openclaw-agent-teams/tree/main/dev">
+                <div class="team-card-actions">
+                    <a class="team-card-source" href="https://github.com/zenithventure/openclaw-agent-teams/tree/main/product-builder">View source ↗</a>
+                    <button class="team-card-install" onclick="copyInstallCmd(this)" data-team="product-builder" aria-label="Copy install command">Copy install</button>
+                </div>
+            </div>
+            <div class="team-card">
                 <div class="team-card-header">
                     <div class="team-card-icon">&#x1f916;</div>
                     <h3>Dev (Claude Code)</h3>
@@ -766,9 +1296,12 @@
                     <span class="agent-tag green">Shipper</span>
                     <span class="agent-tag blue">Reviewer</span>
                 </div>
-                <div class="team-card-flag">--team dev</div>
-            </a>
-            <a class="team-card" href="https://github.com/zenithventure/openclaw-agent-teams/tree/main/modernizer">
+                <div class="team-card-actions">
+                    <a class="team-card-source" href="https://github.com/zenithventure/openclaw-agent-teams/tree/main/dev">View source ↗</a>
+                    <button class="team-card-install" onclick="copyInstallCmd(this)" data-team="dev" aria-label="Copy install command">Copy install</button>
+                </div>
+            </div>
+            <div class="team-card">
                 <div class="team-card-header">
                     <div class="team-card-icon">&#x1f504;</div>
                     <h3>Legacy Modernizer</h3>
@@ -780,9 +1313,12 @@
                     <span class="agent-tag green">Documenter</span>
                     <span class="agent-tag blue">ComplianceGate</span>
                 </div>
-                <div class="team-card-flag">--team modernizer</div>
-            </a>
-            <a class="team-card" href="https://github.com/zenithventure/openclaw-agent-teams/tree/main/accountant">
+                <div class="team-card-actions">
+                    <a class="team-card-source" href="https://github.com/zenithventure/openclaw-agent-teams/tree/main/modernizer">View source ↗</a>
+                    <button class="team-card-install" onclick="copyInstallCmd(this)" data-team="modernizer" aria-label="Copy install command">Copy install</button>
+                </div>
+            </div>
+            <div class="team-card">
                 <div class="team-card-header">
                     <div class="team-card-icon">&#x1f4b0;</div>
                     <h3>Accountant</h3>
@@ -794,9 +1330,12 @@
                     <span class="agent-tag green">Reporter</span>
                     <span class="agent-tag blue">Tax Prep</span>
                 </div>
-                <div class="team-card-flag">--team accountant</div>
-            </a>
-            <a class="team-card" href="https://github.com/zenithventure/openclaw-agent-teams/tree/main/recruiter">
+                <div class="team-card-actions">
+                    <a class="team-card-source" href="https://github.com/zenithventure/openclaw-agent-teams/tree/main/accountant">View source ↗</a>
+                    <button class="team-card-install" onclick="copyInstallCmd(this)" data-team="accountant" aria-label="Copy install command">Copy install</button>
+                </div>
+            </div>
+            <div class="team-card">
                 <div class="team-card-header">
                     <div class="team-card-icon">&#x1f465;</div>
                     <h3>Recruiter</h3>
@@ -808,9 +1347,12 @@
                     <span class="agent-tag green">Coordinator</span>
                     <span class="agent-tag blue">Compliance</span>
                 </div>
-                <div class="team-card-flag">--team recruiter</div>
-            </a>
-            <a class="team-card" href="https://github.com/zenithventure/openclaw-agent-teams/tree/main/real-estate">
+                <div class="team-card-actions">
+                    <a class="team-card-source" href="https://github.com/zenithventure/openclaw-agent-teams/tree/main/recruiter">View source ↗</a>
+                    <button class="team-card-install" onclick="copyInstallCmd(this)" data-team="recruiter" aria-label="Copy install command">Copy install</button>
+                </div>
+            </div>
+            <div class="team-card">
                 <div class="team-card-header">
                     <div class="team-card-icon">&#x1f3e0;</div>
                     <h3>Real Estate</h3>
@@ -822,14 +1364,17 @@
                     <span class="agent-tag green">Coordinator</span>
                     <span class="agent-tag blue">Underwriter</span>
                 </div>
-                <div class="team-card-flag">--team real-estate</div>
-            </a>
+                <div class="team-card-actions">
+                    <a class="team-card-source" href="https://github.com/zenithventure/openclaw-agent-teams/tree/main/real-estate">View source ↗</a>
+                    <button class="team-card-install" onclick="copyInstallCmd(this)" data-team="real-estate" aria-label="Copy install command">Copy install</button>
+                </div>
+            </div>
         </div>
     </section>
 
     <section class="do-deploy" id="digitalocean">
         <h2 class="section-heading">Deploy to DigitalOcean</h2>
-        <p class="section-subtitle">Three steps take a bare Ubuntu 24.04 droplet from zero to a fully hardened, TLS-terminated, production-ready instance.</p>
+        <p class="section-subtitle">Three commands take a bare Ubuntu 24.04 droplet from zero to a hardened, TLS-terminated, production-ready instance. Step 4 makes the team yours.</p>
 
         <div class="do-banner">
             <h3>Two scripts. Zero to production.</h3>
@@ -888,14 +1433,62 @@
             <div class="do-step">
                 <div class="do-step-number">3</div>
                 <div>
-                    <div class="step-label">Still as openclaw user</div>
+                    <div class="step-label">Still as openclaw user · Replace operator with your team</div>
                     <h3>Deploy your team</h3>
                     <p>Pick any team and deploy it. The script clones the repo, runs setup, and deploys agent workspaces and skills. It also applies the OpenClaw 3.2 systemd workaround and reloads the gateway automatically — no separate patch step.</p>
                     <div class="step-command" onclick="copyCommand(this)" data-copy="curl -fsSL https://raw.githubusercontent.com/zenithventure/openclaw-agent-teams/main/install-team.sh | bash -s -- --team operator"><span class="prompt">$ </span>curl -fsSL https://raw.githubusercontent.com/zenithventure/openclaw-agent-teams/main/install-team.sh \<br>&nbsp;&nbsp;| bash -s -- --team operator<button class="copy-icon" aria-label="Copy to clipboard"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg></button></div>
                 </div>
             </div>
+            <div class="do-step">
+                <div class="do-step-number">4</div>
+                <div>
+                    <div class="step-label">Make it yours</div>
+                    <h3>Configure VISION, USER, and start</h3>
+                    <p>The team is on disk but dormant until you tell it what it's working on. Edit <code>~/.openclaw/shared/VISION.md</code> (the team's mission), then any agent's <code>USER.md</code> (your name, timezone, GitHub username — they're all identical, edit one and copy). Set <code>ANTHROPIC_API_KEY</code> in <code>~/.openclaw/.env</code> if you didn't pass <code>--api-key</code>. Then start:</p>
+                    <div class="step-command" onclick="copyCommand(this)" data-copy="openclaw start"><span class="prompt">$ </span>openclaw start<button class="copy-icon" aria-label="Copy to clipboard"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg></button></div>
+                </div>
+            </div>
         </div>
 
+    </section>
+
+    <section class="do-deploy" id="local">
+        <h2 class="section-heading">Run it locally (macOS / Linux)</h2>
+        <p class="section-subtitle">Already have OpenClaw installed, or want to try a team without a droplet. Skip the server steps and run the team's <code>setup.sh</code> directly.</p>
+
+        <div class="do-banner">
+            <h3>Two commands. No server.</h3>
+            <p>Install OpenClaw if you don't have it, then run any team's <code>setup.sh</code>. Files land in <code>~/.openclaw/</code> on your machine. On macOS make sure Node.js 22+ is on PATH (<code>brew install node@22</code>).</p>
+        </div>
+
+        <div class="do-steps">
+            <div class="do-step">
+                <div class="do-step-number">1</div>
+                <div>
+                    <div class="step-label">If you don't already have it</div>
+                    <h3>Install OpenClaw</h3>
+                    <p>Same official installer used on the droplet — works on macOS and Linux with Node.js 22+.</p>
+                    <div class="step-command" onclick="copyCommand(this)" data-copy="curl -fsSL https://openclaw.ai/install.sh | bash"><span class="prompt">$ </span>curl -fsSL https://openclaw.ai/install.sh | bash<button class="copy-icon" aria-label="Copy to clipboard"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg></button></div>
+                </div>
+            </div>
+            <div class="do-step">
+                <div class="do-step-number">2</div>
+                <div>
+                    <div class="step-label">Replace operator with any team name</div>
+                    <h3>Deploy a team</h3>
+                    <p>Clones the repo to <code>/tmp</code>, runs the team's <code>setup.sh</code>, lands files in <code>~/.openclaw/</code>. Same idempotent script as the DigitalOcean path.</p>
+                    <div class="step-command" onclick="copyCommand(this)" data-copy="git clone --depth 1 https://github.com/zenithventure/openclaw-agent-teams.git /tmp/openclaw-teams && bash /tmp/openclaw-teams/operator/setup.sh"><span class="prompt">$ </span>git clone --depth 1 https://github.com/zenithventure/openclaw-agent-teams.git /tmp/openclaw-teams \<br>&nbsp;&nbsp;&& bash /tmp/openclaw-teams/operator/setup.sh<button class="copy-icon" aria-label="Copy to clipboard"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg></button></div>
+                </div>
+            </div>
+            <div class="do-step">
+                <div class="do-step-number">3</div>
+                <div>
+                    <div class="step-label">Make it yours, then start</div>
+                    <h3>Configure VISION, USER, and start</h3>
+                    <p>Edit <code>~/.openclaw/shared/VISION.md</code> and any agent's <code>USER.md</code>. Put your <code>ANTHROPIC_API_KEY</code> in <code>~/.openclaw/.env</code>. Then <code>openclaw start</code>.</p>
+                </div>
+            </div>
+        </div>
     </section>
 
     <section class="do-deploy" id="ansible">
@@ -905,13 +1498,37 @@
         <div class="do-banner">
             <h3>Two playbooks. Same result.</h3>
             <p><code>ansible/bootstrap.yml</code> mirrors <code>bootstrap.sh</code>; <code>ansible/openclaw-team.yml</code> mirrors <code>install-team.sh</code>. Run them against your inventory and every droplet ends up in the same place as the shell flow. Requires Ansible 2.14+.</p>
+            <details class="ansible-setup">
+                <summary>Don't have Ansible yet? Expand for install + sample inventory ↓</summary>
+                <div class="ansible-setup-body">
+                    <h4>1. Install Ansible on your control machine</h4>
+                    <p>Pick whichever fits your OS. Any version <strong>≥ 2.14</strong> works.</p>
+                    <div class="step-command" onclick="copyCommand(this)" data-copy="brew install ansible"><span class="prompt">$ </span>brew install ansible <span style="color: var(--text-muted)"># macOS</span><button class="copy-icon" aria-label="Copy to clipboard"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg></button></div>
+                    <div class="step-command" onclick="copyCommand(this)" data-copy="pipx install --include-deps ansible"><span class="prompt">$ </span>pipx install --include-deps ansible <span style="color: var(--text-muted)"># Linux / cross-platform via pipx</span><button class="copy-icon" aria-label="Copy to clipboard"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg></button></div>
+                    <p style="margin-top: 0.5rem; font-size: 0.85rem;">Confirm with <code>ansible --version</code>. Full options in the <a href="https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html" target="_blank" rel="noopener">official Ansible install guide ↗</a>.</p>
+
+                    <h4 style="margin-top: 1.75rem;">2. Clone this repo and create a <code>hosts</code> inventory</h4>
+                    <p>The <code>-i hosts</code> flag in the playbook commands below refers to a small text file listing your target droplets. Clone the repo first so the playbooks are on disk, then drop a file like this next to them:</p>
+                    <div class="step-command" onclick="copyCommand(this)" data-copy="git clone https://github.com/zenithventure/openclaw-agent-teams.git && cd openclaw-agent-teams"><span class="prompt">$ </span>git clone https://github.com/zenithventure/openclaw-agent-teams.git && cd openclaw-agent-teams<button class="copy-icon" aria-label="Copy to clipboard"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg></button></div>
+                    <p style="margin-top: 0.5rem; font-size: 0.85rem;">Then create a file called <code>hosts</code> in the repo root with your droplet IPs:</p>
+                    <div class="inventory-snippet">
+<span style="color: var(--text-muted)"># hosts</span>
+[droplets]
+team-a ansible_host=203.0.113.10 ansible_user=root
+team-b ansible_host=203.0.113.11 ansible_user=root
+</div>
+                    <p style="margin-top: 0.5rem; font-size: 0.85rem;">Use <code>ansible_user=root</code> on a freshly created droplet (before <code>bootstrap.yml</code> hardens it) — afterwards switch it to the admin user the bootstrap created. Verify connectivity:</p>
+                    <div class="step-command" onclick="copyCommand(this)" data-copy="ansible -i hosts droplets -m ping"><span class="prompt">$ </span>ansible -i hosts droplets -m ping<button class="copy-icon" aria-label="Copy to clipboard"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg></button></div>
+                    <p style="margin-top: 0.5rem; font-size: 0.85rem;">When you see <code>SUCCESS</code> for each host, you're ready to run the playbooks below.</p>
+                </div>
+            </details>
         </div>
 
         <div class="do-steps">
             <div class="do-step">
                 <div class="do-step-number">1</div>
                 <div>
-                    <div class="step-label">From your control machine</div>
+                    <div class="step-label">From your control machine · run from the repo root</div>
                     <h3>Bootstrap the fleet</h3>
                     <p>Hardens each droplet, creates the <code>openclaw</code> and <code>claude</code> users, installs Node.js 22, and provisions Caddy with TLS — for every host in <code>-l droplets</code>.</p>
                     <div class="step-command" onclick="copyCommand(this)" data-copy="ansible-playbook -i hosts ansible/bootstrap.yml -l droplets -e admin_user=szewong -e domain=teams.example.com"><span class="prompt">$ </span>ansible-playbook -i hosts ansible/bootstrap.yml -l droplets \<br>&nbsp;&nbsp;-e admin_user=szewong \<br>&nbsp;&nbsp;-e domain=teams.example.com<button class="copy-icon" aria-label="Copy to clipboard"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg></button></div>
@@ -934,6 +1551,43 @@
             Need secrets out of <code>.env</code> or periodic state backups? See
             <a href="https://github.com/zenithventure/openclaw-agent-teams/blob/main/docs/advanced.md">Advanced setup</a>.
         </p>
+    </section>
+
+    <section class="running-preview" id="preview">
+        <h2 class="section-heading">What it looks like running</h2>
+        <p class="section-subtitle">Once configured, every 30 minutes the agents do a quick standup — each posts what they finished, what's next, and any blockers. Here's a realistic excerpt from the Dev team.</p>
+        <div class="preview-window">
+            <div class="preview-titlebar">
+                <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+                <span class="preview-path">~/.openclaw/shared/standup-log.md</span>
+            </div>
+<div class="preview-body">## 2026-05-23 — 14:30 — Standup
+
+<span class="agent-r">🔴 Lead</span>
+- Status: triaging overnight issues
+- Triaged: #142 (Stripe webhook retries), #143 (CSV export bug)
+- Assigned: #142 → Coder
+- Next: split epic #138 into 3 sub-issues
+
+<span class="agent-y">🟡 Coder</span>
+- Status: PR #144 in flight
+- Spawned Claude Code for #142 — branch fix/142-stripe-webhook-retries
+- Opened: PR #144 (closes #142) — tests pass locally
+- [<span class="tag-decision">HANDOFF</span>] → Reviewer: PR #144 ready for review
+
+<span class="agent-g">🟢 Shipper</span>
+- Status: monitoring v1.4.2 prod deploy (T+12min)
+- CI health: green
+- Deploy: v1.4.2 promoted to prod 14:18, error rate flat
+- Next: nothing scheduled
+
+<span class="agent-b">🔵 Reviewer</span>
+- Status: reviewing PR #144
+- Reviewed today: PR #141 approved
+- [<span class="tag-blocker">BLOCKER</span>] PR #144: missing test for the 3-retry path — requesting changes
+- Next: re-review once Coder re-spawns
+</div>
+        </div>
     </section>
 
     <section class="features">
@@ -974,25 +1628,27 @@
     </section>
 
     <section class="structure">
-        <h2 class="section-heading">Common structure</h2>
-        <p class="section-subtitle">Every team follows this layout. Learn one, understand them all.</p>
-        <div class="structure-tree">
-            <span class="dir">team-name/</span><br>
-            &nbsp;&nbsp;openclaw.json <span class="comment"># agent definitions, tool permissions</span><br>
-            &nbsp;&nbsp;setup.sh <span class="comment"># one-line installer</span><br>
-            &nbsp;&nbsp;<span class="dir">agents/</span><br>
-            &nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">red-&lt;role&gt;/</span> <span class="comment"># DISC: Dominance</span><br>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IDENTITY.md, SOUL.md, AGENTS.md<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;USER.md, HEARTBEAT.md<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">yellow-&lt;role&gt;/</span> <span class="comment"># DISC: Influence</span><br>
-            &nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">green-&lt;role&gt;/</span> <span class="comment"># DISC: Steadiness</span><br>
-            &nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">blue-&lt;role&gt;/</span> <span class="comment"># DISC: Conscientiousness</span><br>
-            &nbsp;&nbsp;<span class="dir">shared/</span><br>
-            &nbsp;&nbsp;&nbsp;&nbsp;VISION.md <span class="comment"># mission, success criteria</span><br>
-            &nbsp;&nbsp;&nbsp;&nbsp;STANDARDS.md <span class="comment"># behavioral standards</span><br>
-            &nbsp;&nbsp;&nbsp;&nbsp;BOOTSTRAP.md <span class="comment"># first-run wizard</span><br>
-            &nbsp;&nbsp;<span class="dir">skills/</span> <span class="comment"># team-specific skills</span>
-        </div>
+        <details class="structure-details">
+            <summary>Curious about the file layout? Expand the team directory structure</summary>
+            <p class="section-subtitle" style="margin-bottom: 2rem;">Every team follows this layout. Learn one, understand them all. See <a href="https://github.com/zenithventure/openclaw-agent-teams/tree/main/_template">_template/</a> for the canonical skeleton.</p>
+            <div class="structure-tree">
+                <span class="dir">team-name/</span><br>
+                &nbsp;&nbsp;openclaw.json <span class="comment"># agent definitions, tool permissions</span><br>
+                &nbsp;&nbsp;setup.sh <span class="comment"># one-line installer</span><br>
+                &nbsp;&nbsp;<span class="dir">agents/</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">red-&lt;role&gt;/</span> <span class="comment"># DISC: Dominance</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IDENTITY.md, SOUL.md, AGENTS.md<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;USER.md, HEARTBEAT.md<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">yellow-&lt;role&gt;/</span> <span class="comment"># DISC: Influence</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">green-&lt;role&gt;/</span> <span class="comment"># DISC: Steadiness</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">blue-&lt;role&gt;/</span> <span class="comment"># DISC: Conscientiousness</span><br>
+                &nbsp;&nbsp;<span class="dir">shared/</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;VISION.md <span class="comment"># mission, success criteria</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;STANDARDS.md <span class="comment"># behavioral standards</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;BOOTSTRAP.md <span class="comment"># first-run wizard</span><br>
+                &nbsp;&nbsp;<span class="dir">skills/</span> <span class="comment"># team-specific skills</span>
+            </div>
+        </details>
     </section>
 
     <footer>
@@ -1016,6 +1672,20 @@
                 icon.classList.remove('copied');
                 icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" /></svg>';
             }, 2000);
+        });
+    }
+
+    function copyInstallCmd(btn) {
+        var team = btn.getAttribute('data-team');
+        var cmd = 'curl -fsSL https://raw.githubusercontent.com/zenithventure/openclaw-agent-teams/main/install-team.sh | bash -s -- --team ' + team;
+        navigator.clipboard.writeText(cmd).then(function() {
+            var original = btn.innerHTML;
+            btn.classList.add('copied');
+            btn.innerHTML = '✓ Copied — paste into your droplet';
+            setTimeout(function() {
+                btn.classList.remove('copied');
+                btn.innerHTML = original;
+            }, 2200);
         });
     }
     </script>
