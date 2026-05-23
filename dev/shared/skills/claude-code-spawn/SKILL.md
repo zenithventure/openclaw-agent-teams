@@ -1,13 +1,16 @@
 # SKILL — claude-code-spawn
 
-**Purpose:** The canonical pattern for spawning a Claude Code session as an OpenClaw subagent. This is the team's primary leverage — Yellow Coder uses it for every implementation task; Lead/Reviewer can use it for read-only research; Shipper can use it for runbook execution.
+**Purpose:** The canonical pattern for spawning a Claude Code session as an OpenClaw subagent. This is the team's primary leverage — **Yellow Coder** uses it for every implementation task, and **Green Shipper** uses it for runbook execution. Lead and Reviewer do not spawn Claude Code directly (see "When to use" below for why).
 
 ## When to use
 
-- **Yellow:** Implementing an issue. Spawn a subagent, hand it the issue and acceptance criterion, let it write the code.
-- **Lead:** Batch-auditing issues ("read all open issues, list ones missing acceptance criteria").
-- **Reviewer:** Read-only inspection ("trace every caller of `processOrder()` and tell me which ones don't handle the new error case").
-- **Shipper:** Runbook execution ("redeploy tag v1.2.3 to staging, then curl /health every 30s for 5 minutes and report").
+- **Yellow Coder:** Implementing an issue. Spawn a subagent, hand it the issue and acceptance criterion, let it write the code. This is the team's main use of Claude Code — Coder's `openclaw.json` entry sets `defaultRuntime: "acp", defaultAgentId: "claude"` so every Coder subagent spawn lands on Claude Code by default.
+- **Green Shipper:** Runbook execution ("redeploy tag v1.2.3 to staging, then curl /health every 30s for 5 minutes and report"). Shipper has the same `acp` / `claude` defaults configured.
+
+**Reviewer and Lead do not use this skill directly:**
+
+- **Blue Reviewer** has `subagents.allowAgents: []` — no subagent privileges at all. Reviewer reads code with `grep`/`rg` and the filesystem; if a PR is too large to read in one session, Reviewer asks Lead to split it.
+- **Red Lead** can spawn subagents in principle (`allowAgents: ["*"]`) but should not run code-touching subagents directly. If Lead needs Claude Code involved (e.g. for a batch issue audit), Lead files an issue and delegates to Coder. Keeping Lead's hands off the implementation surface preserves the team's separation of decision-making from execution.
 
 ## Prerequisites
 
@@ -70,7 +73,8 @@ EOF
 - **Don't paste the whole codebase into the prompt.** Point at files; let the subagent open them.
 - **Don't run more than 2 spawns per issue.** If the second spawn didn't converge, the spec is wrong — re-scope with Lead, don't try a third.
 - **Don't spawn from a heartbeat.** Subagents take minutes; heartbeats should be quick. Kick off a spawn from a normal session, monitor it via memory log entries.
-- **Reviewer never spawns write-enabled subagents.** Reviewer's spawns are read-only inspection only.
+- **Lead doesn't spawn for code work.** If a batch task touches code, Lead files an issue and assigns to Coder rather than spawning directly.
+- **Reviewer doesn't spawn at all.** `subagents.allowAgents: []` enforces this in config; the skill documents it for the reader's mental model.
 
 ## Verifying the spawn
 
