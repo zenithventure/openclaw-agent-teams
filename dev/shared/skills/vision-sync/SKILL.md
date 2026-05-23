@@ -6,65 +6,63 @@ requirements:
   - Read access to shared/standup-log.md
 ---
 
-# Vision Sync Skill
+# Vision Sync Skill (Dev Team)
 
-This skill ensures all agents stay aligned with the team's Vision across sessions.
+This skill keeps all four dev-team agents aligned with `shared/VISION.md` across sessions.
 
 ## When to Use
 
-- At the start of every session (you wake up fresh — the Vision is your orientation)
-- During every heartbeat/standup
-- Before starting any new task (verify it serves the Vision)
-- When you're unsure what to prioritize
+- At the start of every session — the Vision is your orientation.
+- During every heartbeat/standup.
+- Before starting any new task — verify it serves the Vision and isn't drift.
+- Quarterly (Lead's responsibility): a deliberate sync to check whether what's in the queue still matches what the Vision says the team is for.
 
 ## Sync Protocol
 
 ### Step 1: Read the Vision
 Read `shared/VISION.md` completely. Pay attention to:
 - The mission statement (your north star)
-- Success criteria (how you know you're done)
-- Constraints (boundaries you must respect)
-- Priority order (when you must choose, what wins)
-- Current phase and active priorities (maintained by the team)
+- "What we build" — the specific repo(s) this team owns
+- Success criteria — time-to-PR, PR pass rate, test coverage, no silent failures
+- Constraints — never push to main, never bypass CI, never act on plaintext secrets, never ship without a test plan
+- Priority order — when constraints conflict, the higher-numbered wins
 
 ### Step 2: Check Team Context
 Read `shared/standup-log.md` for the latest team state:
-- What have other agents accomplished?
-- What decisions were made?
-- What blockers exist?
-- What's the current division of labor?
+- Open PRs and who's blocking on whom
+- Deploy status and any incidents
+- Decisions Lead has made
+- Blockers that touch your role
 
 ### Step 3: Align Your Work
 Based on your role, determine:
-- **What should I work on?** (Highest-impact task within your role)
-- **Does my current work serve the Vision?** (If not, pivot)
+- **What should I work on now?** (Top of the queue for your role)
+- **Does my current work serve the Vision?** (If not, pivot or escalate to Lead)
 - **Am I duplicating someone else's work?** (Coordinate, don't collide)
-- **Are there gaps no one is covering?** (Flag them for the team)
+- **Are there gaps no one is covering?** (Flag for Lead)
 
-### Step 4: Update Shared State
-If the Vision status has changed based on your work:
-- Update the "Current Phase" section of VISION.md
-- Update "Active Priorities" if priorities have shifted
-- Log any key decisions in the decisions table
-- Flag new blockers if discovered
+### Step 4: Surface Drift
+If the active queue no longer aligns with the Vision (e.g. team is shipping lots of one-off scripts but Vision says we own a specific product repo), file a `vision-sync` issue on the team's repo tagged for Lead to triage.
 
 ## Role-Specific Alignment
 
-**Red Commander:** Focus on whether priorities are correct and execution is on track. Make calls on what to cut if time is scarce.
+**Red Lead:** Focus on whether the queue's priorities match the Vision and whether the team's velocity supports the success criteria. Decide what to cut if time is scarce.
 
-**Yellow Spark:** Focus on whether we're missing creative opportunities. Challenge the approach if a better path exists.
+**Yellow Coder:** Focus on whether you're spawning Claude Code (good) or hand-editing (bad). If you've been typing more than directing, that's drift — pivot back to spawn-and-review.
 
-**Green Anchor:** Focus on whether commitments are being tracked and the team is coordinated. Flag process gaps.
+**Green Shipper:** Focus on whether deploys are boring (good) or eventful (drift). Flag flaky CI or noisy deploys as the kind of debt the Vision constraints exist to prevent.
 
-**Blue Lens:** Focus on whether assumptions are validated and risks are managed. Challenge claims that lack evidence.
+**Blue Reviewer:** Focus on whether tests are present and meaningful. A PR without tests is a Vision violation — block.
 
 ## Vision Not Configured?
 
-If `VISION.md` still contains the placeholder template:
-1. Do NOT start working on arbitrary tasks
-2. Send a message to Mr Z: "The Vision hasn't been configured yet. Please update shared/VISION.md with your team's mission so we can begin."
-3. In the meantime, each agent should prepare for their role:
-   - Commander: Set up task tracking structure
-   - Spark: Research potential approaches
-   - Anchor: Ensure all processes and templates are ready
-   - Lens: Prepare analysis frameworks
+If `VISION.md` still contains the placeholder template ("Replace this section with the specific product, repo(s), or domain you want the team to work on…"):
+
+1. **Do NOT** start picking up issues against an arbitrary repo.
+2. Send a message to the human via the configured channel:
+   > "The Vision isn't configured yet. Edit `~/.openclaw/shared/VISION.md` to name the repo this team should own and the success criteria, then ping us."
+3. While waiting, each agent can prep their workspace:
+   - Lead: dry-run a triage pass on the team's *own* repo (`zenithventure/openclaw-agent-teams`) as a no-op exercise
+   - Coder: verify `claude-code-spawn` prerequisites — `which acpx claude`, `ANTHROPIC_API_KEY` set, `GITHUB_TOKEN` set
+   - Shipper: read whatever CI config exists; document the deploy tooling in `memory/MEMORY.md`
+   - Reviewer: study the team's review style from existing PR history

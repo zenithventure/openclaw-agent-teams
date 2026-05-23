@@ -1,121 +1,121 @@
 ---
 name: daily-report
-description: Compile and send a consolidated team report to the human. Three times daily — morning (9:00), midday (13:00), and end-of-day (17:00).
+description: Compile and send a consolidated dev-team status report to the human operator. Three times daily — morning (9:00), midday (13:00), and end-of-day (17:00).
 requirements:
   - Read access to shared workspace and standup logs
-  - Ability to send messages to human via configured channel
+  - Ability to send messages to the human via configured channel
 ---
 
-# Daily Report Skill
+# Daily Report Skill (Dev Team)
 
-You are compiling a team status report for Mr Z. Reports are sent three times per day: morning, midday, and end-of-day.
+You are compiling a team status report for the human operator. Reports are sent three times per day: morning, midday, and end-of-day.
 
 ## Who Compiles the Report
 
-**Red Commander** is responsible for compiling the final consolidated report. Other agents contribute their sections, and Commander assembles and sends it.
+**Red Lead** is responsible for compiling and sending the final consolidated report. Other agents contribute their sections during the standup window preceding each report.
 
-If Commander is unavailable, the fallback order is: Green Anchor → Blue Lens → Yellow Spark.
+Fallback order if Lead is unavailable: Green Shipper → Blue Reviewer → Yellow Coder.
 
 ## Report Timing
 
 | Report | Time | Purpose |
 |--------|------|---------|
-| Morning | 9:00 AM | Set the day's plan and priorities |
-| Midday | 1:00 PM | Check progress and surface blockers |
-| End-of-Day | 5:00 PM | Summarize results and preview tomorrow |
+| Morning | 9:00 AM | Today's queue, what got picked up overnight (autonomous mode), deploys planned |
+| Midday | 1:00 PM | Mid-day progress, PRs awaiting review, deploy status |
+| End-of-Day | 5:00 PM | What shipped, what's open, what's queued for overnight or tomorrow |
 
-_(Times are in the human's configured timezone)_
+_(Times are in the human's configured timezone from `USER.md`.)_
 
 ## Report Format
 
 ### Morning Report Template
 
 ```
-Good morning, Mr Z. Here's your team's plan for today.
+Good morning. Here's the dev team's plan for today.
 
-VISION STATUS: [On track / Adjusting / Blocked]
+QUEUE STATUS: [N issues ready, M in flight, K awaiting human]
 
-TODAY'S PRIORITIES:
-1. [Highest priority task] — Owner: [Agent]
-2. [Second priority] — Owner: [Agent]
-3. [Third priority] — Owner: [Agent]
+OVERNIGHT (autonomous mode, if enabled):
+- [PR #NN opened for issue #MM, status]
+- [No autonomous work / mode disabled]
 
-DECISIONS NEEDED FROM YOU:
+TODAY'S PLAN:
+1. [Issue #NN — Coder]
+2. [Issue #MM — Coder]
+3. [Deploy v1.2.3 to staging — Shipper]
+
+PRs AWAITING REVIEW: [#NN, #MM] — Reviewer
+PRs APPROVED + WAITING ON MERGE CALL: [#NN] — needs your call
+
+DECISIONS NEEDED:
 - [Decision 1, if any]
 - None today [if none]
 
-OVERNIGHT PROGRESS:
-[Brief summary of any work done since last EOD report]
-
-TEAM HEALTH: [Good / Some friction / Needs attention]
+CI HEALTH: [Green / N failures, link]
 ```
 
 ### Midday Report Template
 
 ```
-Midday check-in, Mr Z.
+Midday check-in.
 
 PROGRESS SINCE MORNING:
-- [Completed item 1]
-- [Completed item 2]
-- [In progress: item 3 — ETA: X]
+- [PR #NN merged]
+- [Issue #MM in-flight — Claude Code session running]
+- [PR #KK reviewed — changes requested]
+
+PRs AWAITING YOUR MERGE CALL: [#NN approved + green]
 
 BLOCKERS:
 - [Blocker requiring human input, if any]
 - None [if none]
 
-PRIORITY CHANGES:
-- [Any shifts in priority and why]
-- No changes [if stable]
-
-CREATIVE INSIGHTS (from Spark):
-[One-liner if Yellow has something worth surfacing]
-
-RISK FLAGS (from Lens):
-[One-liner if Blue has identified a new risk]
+DEPLOY STATUS:
+- [Promoted v1.2.3 to staging — healthy]
+- [Prod deploy planned for 16:00]
 ```
 
 ### End-of-Day Report Template
 
 ```
-EOD report, Mr Z. Here's how today went.
+EOD report.
 
-ACCOMPLISHED TODAY:
-- [Deliverable 1]
-- [Deliverable 2]
-- [Deliverable 3]
+SHIPPED TODAY:
+- [PR #NN — title — merged]
+- [PR #MM — title — merged]
 
-CARRIED OVER TO TOMORROW:
-- [Item not completed, with reason]
+OPEN PRs:
+- [PR #KK — awaiting Reviewer]
+- [PR #LL — awaiting your merge call]
 
-VISION PROGRESS: [X% toward goal / Phase N of M complete]
+CARRIED OVER:
+- [Issue #NN — re-spawn needed (Claude Code didn't converge)]
 
-KEY DECISIONS MADE TODAY:
-- [Decision and reasoning]
+INCIDENTS / ROLLBACKS:
+- [Any incident issues, or "None"]
 
-LESSONS LEARNED:
-- [Process improvement or insight]
+OVERNIGHT QUEUE (autonomous mode):
+- [N issues labeled `ready` and `no:assignee`, will be picked up after Y:00]
 
-TOMORROW'S PREVIEW:
-1. [Top priority for tomorrow]
-2. [Second priority]
-3. [Third priority]
+TOMORROW'S TOP PRIORITIES:
+1. [Issue or theme]
+2. [Issue or theme]
 
-BLOCKERS FOR TOMORROW:
-- [Items needing human input before tomorrow's work can proceed]
+DECISIONS NEEDED BEFORE TOMORROW:
+- [Items requiring you, or "None"]
 ```
 
 ## Report Guidelines
 
-- **Be concise.** Mr Z wants to scan in under 60 seconds. Details are in the standup log if needed.
-- **Be honest.** Don't hide bad news. Surface problems early with proposed solutions.
-- **Consolidate.** This is ONE team report, not four individual reports. Speak as "the team."
-- **Actionable blockers.** If you need human input, be specific about what decision is needed and provide options.
-- **No internal drama.** Team dynamics issues are resolved internally. Only escalate to Mr Z if they're affecting output.
-- **Quantify when possible.** "Completed 3 of 5 research sections" beats "made progress on research."
+- **Be concise.** The human wants to scan in under 60 seconds. Details are in `standup-log.md`.
+- **Be honest.** Don't hide a stuck Claude Code spawn or a flaky deploy. Surface problems with proposed next steps.
+- **Speak as one team.** This is the team's report, not four reports stapled together.
+- **Actionable blockers.** If you need human input, say what decision is needed and offer concrete options.
+- **Quantify.** "Merged 3 of 4 ready PRs" beats "made progress."
+- **Link PRs and issues.** Every reference should be clickable.
 
 ## After Sending
 
-- Save a copy of each report to `shared/reports/YYYY-MM-DD-[morning|midday|eod].md`
-- Update `shared/VISION.md` team working notes if the Vision status changed
-- Green Anchor should verify the report was sent successfully
+- Save a copy of each report to `shared/reports/YYYY-MM-DD-[morning|midday|eod].md`.
+- If a Vision adjustment was implied (e.g. priorities shifted), Lead updates the Current Phase section of `VISION.md`.
+- Shipper verifies the report was actually delivered to the configured channel.

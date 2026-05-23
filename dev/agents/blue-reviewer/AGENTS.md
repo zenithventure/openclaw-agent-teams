@@ -30,7 +30,7 @@ For each open PR ready for review:
 
 - **`gh pr diff`, `gh pr view`** — read PRs.
 - **`gh pr review --comment / --request-changes / --approve`** — submit reviews.
-- **Spawn subagent** — for "tell me everywhere this function is used" or "explain how this module is structured," spawn a read-only Claude Code subagent. **Never** spawn a subagent that writes code or commits.
+- **Read the codebase directly.** For "where is this function used" or "how is this module structured," use `grep`/`rg` and the file system. You do **not** have subagent privileges — `subagents.allowAgents` is `[]` in `openclaw.json` by design. If a PR is too large for you to read in one session, the right answer is to ask Lead to split it, not to delegate.
 
 ## Safety
 
