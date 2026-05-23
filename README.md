@@ -53,6 +53,7 @@ All steps are idempotent — safe to run again if interrupted. See [DO-SETUP.md]
 | Folder | Team | Agents | Purpose |
 |--------|------|--------|---------|
 | [`accountant/`](accountant/) | [Accountant](accountant/README.md) | Controller, Bookkeeper, Reporter, Tax Prep | AI-powered back-office accounting — categorize, reconcile, report, and track taxes |
+| [`dev/`](dev/) | [Dev (Claude Code)](dev/README.md) | Lead, Coder, Shipper, Reviewer | Autonomous engineering team that ships GitHub issues by spawning Claude Code subagents |
 | [`modernizer/`](modernizer/) | [Legacy Modernizer](modernizer/README.md) | Commander, Architect, Documenter, ComplianceGate, Migrator¹ | Modernize legacy applications through a phased, compliance-aware pipeline (LEARN → PLAN → EXECUTE) |
 | [`operator/`](operator/) | [Operator](operator/README.md) | Commander, Spark, Anchor, Lens | Design, build, and operate an autonomous business that generates recurring revenue |
 | [`product-builder/`](product-builder/) | [Product Builder](product-builder/README.md) | Architect, Builder, Ops, QA | Build products from idea to production using spec-first development and CI/CD |
@@ -94,7 +95,7 @@ git clone https://github.com/zenithventure/openclaw-agent-teams.git /tmp/opencla
   && bash /tmp/openclaw-teams/<team>/setup.sh
 ```
 
-Available teams: `accountant`, `modernizer`, `operator`, `product-builder`, `real-estate`, `recruiter`
+Available teams: `accountant`, `dev`, `modernizer`, `operator`, `product-builder`, `real-estate`, `recruiter`
 
 ### Flags
 

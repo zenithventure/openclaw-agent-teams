@@ -1,0 +1,73 @@
+{
+  "agents": {
+    "defaults": {
+      "compaction": {
+        "mode": "safeguard"
+      },
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
+      }
+    },
+    "list": [
+      {
+        "id": "red-lead",
+        "name": "Lead",
+        "workspace": "~/.openclaw/workspace-red-lead",
+        "tools": {
+          "deny": ["write", "edit", "apply_patch"]
+        },
+        "subagents": {
+          "allowAgents": ["*"]
+        }
+      },
+      {
+        "id": "yellow-coder",
+        "name": "Coder",
+        "workspace": "~/.openclaw/workspace-yellow-coder",
+        "subagents": {
+          "allowAgents": ["*"],
+          "defaultRuntime": "acp",
+          "defaultAgentId": "claude"
+        }
+      },
+      {
+        "id": "green-shipper",
+        "name": "Shipper",
+        "workspace": "~/.openclaw/workspace-green-shipper",
+        "subagents": {
+          "allowAgents": ["*"],
+          "defaultRuntime": "acp",
+          "defaultAgentId": "claude"
+        }
+      },
+      {
+        "id": "blue-reviewer",
+        "name": "Reviewer",
+        "workspace": "~/.openclaw/workspace-blue-reviewer",
+        "tools": {
+          "deny": ["write", "edit", "apply_patch"]
+        },
+        "subagents": {
+          "allowAgents": []
+        }
+      }
+    ]
+  },
+  "tools": {
+    "agentToAgent": {
+      "enabled": true,
+      "allow": [
+        "red-lead",
+        "yellow-coder",
+        "green-shipper",
+        "blue-reviewer"
+      ]
+    }
+  },
+  "skills": {
+    "load": {
+      "extraDirs": ["~/.openclaw/skills"]
+    }
+  }
+}
