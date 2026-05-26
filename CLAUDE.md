@@ -11,6 +11,12 @@ updates a live bot.
 internally consistent, and deployable. A team is *pure data* — you almost never
 need to write a shell script.
 
+> **In-progress work:** the "agent-as-a-service" build-out has a checked-in plan
+> at [`docs/agent-as-a-service-plan.md`](docs/agent-as-a-service-plan.md).
+> Phase 1 (this generic deployer + authoring contract) is shipped; Phases 2–3
+> (Ansible fleet inventory, secrets, docs) are open. If you're continuing that
+> work, start from the next unchecked phase there.
+
 ---
 
 ## What a team is
