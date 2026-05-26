@@ -97,31 +97,19 @@ while [[ $# -gt 0 ]]; do
 done
 
 # ── Validate ───────────────────────────────────────────────
-
-VALID_TEAMS="product-builder accountant recruiter real-estate modernizer operator dev"
+# Teams are no longer hard-coded — any top-level directory in the repo
+# that contains an openclaw.json and an agents/ folder is a deployable
+# team. This includes teams you author yourself. The team directory is
+# validated structurally after the repo is cloned (see run_team_deploy).
 
 if [[ -z "$TEAM" ]]; then
     log_err "--team is required"
     echo ""
-    echo "  Available teams: ${VALID_TEAMS}"
+    echo "  --team is any team directory in the repo (built-in or your own)."
     echo ""
     echo "  Example:"
     echo "    curl -fsSL https://raw.githubusercontent.com/zenithventure/openclaw-agent-teams/main/install-team.sh \\"
     echo "      | bash -s -- --team operator"
-    exit 1
-fi
-
-# Validate team name
-TEAM_VALID=false
-for t in $VALID_TEAMS; do
-    if [[ "$t" == "$TEAM" ]]; then
-        TEAM_VALID=true
-        break
-    fi
-done
-if [[ "$TEAM_VALID" != true ]]; then
-    log_err "Unknown team: $TEAM"
-    echo "  Available teams: ${VALID_TEAMS}"
     exit 1
 fi
 
@@ -162,17 +150,44 @@ clone_repo() {
     log_ok "Cloned to ${CLONE_DIR}"
 }
 
-# ── Run team setup.sh ──────────────────────────────────────
-run_team_setup() {
-    log_step "  Running ${TEAM}/setup.sh..."
+# ── List deployable teams discovered in the clone ──────────
+list_available_teams() {
+    local d
+    for d in "${CLONE_DIR}"/*/; do
+        if [[ -f "${d}openclaw.json" && -d "${d}agents" ]]; then
+            echo "    - $(basename "$d")"
+        fi
+    done
+}
 
-    if [[ ! -f "${CLONE_DIR}/${TEAM}/setup.sh" ]]; then
-        log_err "setup.sh not found at ${CLONE_DIR}/${TEAM}/setup.sh"
+# ── Deploy the team via the generic deployer ───────────────
+run_team_deploy() {
+    local team_dir="${CLONE_DIR}/${TEAM}"
+
+    # Structural validation: a team is any dir with openclaw.json + agents/.
+    if [[ ! -f "${team_dir}/openclaw.json" || ! -d "${team_dir}/agents" ]]; then
+        log_err "Not a deployable team: ${TEAM}"
+        echo "  (a team directory needs openclaw.json and agents/)"
+        echo ""
+        echo "  Available teams:"
+        list_available_teams
         exit 1
     fi
 
-    bash "${CLONE_DIR}/${TEAM}/setup.sh"
-    log_ok "Team setup complete"
+    log_step "  Deploying ${TEAM}..."
+    # Prefer the team's own setup.sh when present — for built-in teams this is a
+    # thin shim over the generic deployer, but a team may ship bespoke logic
+    # (e.g. modernizer). Pure-data teams with no setup.sh fall back to the
+    # generic deployer directly.
+    if [[ -f "${team_dir}/setup.sh" ]]; then
+        bash "${team_dir}/setup.sh"
+    elif [[ -f "${CLONE_DIR}/lib/deploy-team.sh" ]]; then
+        bash "${CLONE_DIR}/lib/deploy-team.sh" --team-dir "${team_dir}"
+    else
+        log_err "No deployer found (${TEAM}/setup.sh or lib/deploy-team.sh)"
+        exit 1
+    fi
+    log_ok "Team deploy complete"
 }
 
 # ── Patch OpenClaw 3.2 systemd / config quirks ─────────────
@@ -258,7 +273,7 @@ configure_api_key() {
 }
 
 clone_repo
-run_team_setup
+run_team_deploy
 # Write the API key before patch_service so the gateway picks it up
 # on its first (re)start. Otherwise it would boot without the key and
 # never be restarted again in this run.

@@ -1,0 +1,34 @@
+{
+  "agents": {
+    "defaults": {
+      "compaction": {
+        "mode": "safeguard"
+      },
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
+      }
+    },
+    "list": [
+      {
+        "id": "example-agent",
+        "name": "Example",
+        "workspace": "~/.openclaw/workspace-example-agent",
+        "subagents": {
+          "allowAgents": ["*"]
+        }
+      }
+    ]
+  },
+  "tools": {
+    "agentToAgent": {
+      "enabled": true,
+      "allow": ["example-agent"]
+    }
+  },
+  "skills": {
+    "load": {
+      "extraDirs": ["~/.openclaw/skills"]
+    }
+  }
+}
