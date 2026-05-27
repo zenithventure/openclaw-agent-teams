@@ -1,49 +1,48 @@
 # Building a New OpenClaw Team
 
-This directory is a developer reference for creating new agent teams. It contains canonical templates for every file an agent needs, along with the shared files that bind a team together.
+This directory is a developer reference for creating new agent teams, and is itself a **valid, deployable single-agent team** (it ships an `openclaw.json` and one `example-agent`). It contains canonical templates for every file an agent needs, along with the shared files that bind a team together.
 
-Use this as your starting point. Copy the structure, fill in the blanks, and you have a deployable team.
+Use this as your starting point. Copy `_template/` to `<your-team>/`, fill in the blanks, and you have a deployable team. A team is **pure data** — you do not need to write a deploy script (see [How deploy works](#how-deploy-works)). For the full authoring contract, see [`../CLAUDE.md`](../CLAUDE.md).
+
+A team holds **1 to N agents**. A single agent is completely valid; the four-color DISC layout below is a common, balanced *pattern* for multi-agent teams — not a requirement.
 
 ---
 
 ## File Structure
 
-Every team follows this layout:
-
 ```
 team-name/
-  README.md                  # Team overview (for humans browsing the repo)
-  openclaw.json              # Agent definitions, tool permissions, skill config
-  setup.sh                   # One-line installer for OpenClaw
-  agents/
-    red-<role>/              # Red agent (Dominance — Leader)
+  README.md                  # Team overview (for humans browsing the repo) — optional
+  openclaw.json              # REQUIRED — agent definitions, tool permissions, skill config
+  setup.sh                   # OPTIONAL — thin shim over lib/deploy-team.sh (built-in teams have one)
+  env.template               # OPTIONAL — custom .env with extra provider/service keys
+  agents/                    # REQUIRED — one directory per agent (1..N)
+    <agent-id>/              # e.g. red-commander, or just support-bot for a solo agent
       AGENTS.md              # Role-specific workflow and instructions
       SOUL.md                # Personality, beliefs, communication style
       IDENTITY.md            # Name, type, color, DISC profile
       USER.md                # Human operator information (same across all agents)
       HEARTBEAT.md           # Check-in rhythm and schedule
-    yellow-<role>/           # Yellow agent (Influence — Creative)
-      ...same files...
-    green-<role>/            # Green agent (Steadiness — Operations)
-      ...same files...
-    blue-<role>/             # Blue agent (Conscientiousness — Quality)
-      ...same files...
   shared/
     VISION.md                # Mission, success criteria, constraints, priorities
     STANDARDS.md             # Baseline behavioral rules (canonical — do not edit per team)
     BOOTSTRAP.md             # First-run setup wizard (canonical — do not edit per team)
     standup-log.md           # Agent-maintained standup entries
-  skills/                    # Team-specific skill definitions (optional)
-    skill-name/
-      SKILL.md
+    skills/                  # Team-specific skill definitions (optional)
+      skill-name/
+        SKILL.md
   examples/                  # Example VISION.md files for different use cases (optional)
 ```
 
+The deployer maps each `agents/<agent-id>/` to an `openclaw.json` agent with
+`"id": "<agent-id>"` and `"workspace": "~/.openclaw/workspace-<agent-id>"`. Keep
+the directory name, the `id`, and the workspace path in sync.
+
 ---
 
-## The DISC Structure
+## The DISC Structure (a pattern for multi-agent teams)
 
-Every team uses four agents mapped to the DISC behavioral model. This gives each team a balanced mix of leadership, creativity, reliability, and rigor.
+The built-in multi-agent teams use four agents mapped to the DISC behavioral model. This gives a team a balanced mix of leadership, creativity, reliability, and rigor. It is a recommended pattern when you want a full team — not a hard requirement. Author one agent, or three, or six, as the job demands.
 
 | Color  | DISC Profile       | Team Function      | Typical Role Names                     |
 |--------|--------------------|--------------------|----------------------------------------|
@@ -120,29 +119,36 @@ Located in `shared/standup-log.md`. Starts empty. Agents write their standup ent
 
 ---
 
-## setup.sh Structure
+<a name="how-deploy-works"></a>
+## How deploy works
 
-Every team needs a `setup.sh` that deploys the team to `~/.openclaw/`. The standard structure is:
+You do **not** write a deploy script. The generic deployer at
+[`../lib/deploy-team.sh`](../lib/deploy-team.sh) deploys any team directory to
+`~/.openclaw/`, driven entirely by the team's data:
 
-1. **Banner** — team name and agent summary
-2. **Preflight checks** — verify openclaw, node, gh are available
-3. **Argument parsing** — support `--clean`, `--uninstall`, `--vision "text"`, `--help`
-4. **Directory creation** — `~/.openclaw/workspace-<agent>/memory/`, `shared/reports/`, `skills/`
-5. **Config deployment** — merge or copy `openclaw.json`
-6. **Agent file deployment** — copy SOUL, IDENTITY, AGENTS, HEARTBEAT, USER into each workspace; symlink `shared/`
-7. **Shared file deployment** — copy VISION, standup-log, STANDARDS, BOOTSTRAP
-8. **Skill deployment** — copy SKILL.md files into `~/.openclaw/skills/`
-9. **Env template** — create `.env` if it does not exist
-10. **Summary** — print what was installed and next steps
+```bash
+bash lib/deploy-team.sh --team-dir <your-team>             # install / update
+bash lib/deploy-team.sh --team-dir <your-team> --vision "Mission text"
+bash lib/deploy-team.sh --team-dir <your-team> --clean     # wipe + reinstall
+bash lib/deploy-team.sh --team-dir <your-team> --uninstall # remove
+```
 
-Key behaviors:
+It discovers your agents (from `agents/*/`), merges your `openclaw.json` into any
+existing config, copies agent workspaces and the `shared/` tree, installs skills,
+and seeds `.env`. Key behaviors:
 
-- All operations are idempotent (safe to run again)
-- Existing `openclaw.json` is merged, not replaced (when node is available)
-- Agent workspaces get a symlink to `shared/` so agents can read `shared/VISION.md` directly
-- The `.env` file is created with `chmod 600` and never overwritten
+- **Idempotent** — safe to re-run; re-running is how you push an update.
+- **Merged, not replaced** — existing `openclaw.json` is backed up then merged
+  (your agents added/refreshed, others left alone), so teams coexist on one host.
+- **Declarative refresh** — `SOUL/IDENTITY/AGENTS/HEARTBEAT` always refresh;
+  `USER.md` and `VISION.md` are seeded once so live edits survive re-deploys
+  (use `--vision` to overwrite the mission deliberately).
+- **`.env`** — created `chmod 600`, never overwritten; ships from a team
+  `env.template` if present, else a generic template.
 
-See any existing team's `setup.sh` (e.g., `operator/setup.sh`) as a working reference.
+A built-in team's `setup.sh` is just a thin shim that calls this deployer, so
+`./<team>/setup.sh` still works. New teams need no `setup.sh`. (`modernizer/` is
+the one exception that keeps bespoke logic.)
 
 ---
 
@@ -150,20 +156,21 @@ See any existing team's `setup.sh` (e.g., `operator/setup.sh`) as a working refe
 
 Before deploying a new team, verify:
 
-- [ ] **4 agents** — one Red, one Yellow, one Green, one Blue
-- [ ] **Naming** — all directories use `color-role` format
+- [ ] **1+ agents** — a single agent is fine; use the DISC pattern for full teams
+- [ ] **Naming** — `agents/<id>/` dir name matches its `openclaw.json` `id` and
+      `workspace-<id>` (use `color-role` for multi-agent teams)
 - [ ] **AGENTS.md** — every agent has the `> **Baseline:**` line referencing STANDARDS.md
 - [ ] **AGENTS.md** — every agent has Core Workflow and Safety sections
-- [ ] **SOUL.md** — every agent has a distinct personality, beliefs, and team relationships
-- [ ] **IDENTITY.md** — every agent has name, type, color, and DISC profile
-- [ ] **USER.md** — identical across all four agents (placeholder or configured)
+- [ ] **SOUL.md** — every agent has a distinct personality, beliefs, and relationships
+- [ ] **IDENTITY.md** — every agent has name, type, and (for DISC teams) color/profile
+- [ ] **USER.md** — present for each agent (placeholder or configured)
 - [ ] **HEARTBEAT.md** — every agent has a check-in schedule relevant to their role
 - [ ] **shared/VISION.md** — has all required sections (even if placeholder)
 - [ ] **shared/STANDARDS.md** — copied from canonical template (not modified)
 - [ ] **shared/BOOTSTRAP.md** — copied from canonical template (not modified)
 - [ ] **shared/standup-log.md** — exists with header
-- [ ] **openclaw.json** — all 4 agents defined with correct IDs and workspace paths
-- [ ] **setup.sh** — tested on a clean machine, supports `--clean` and `--uninstall`
+- [ ] **openclaw.json** — every agent defined with matching `id` and workspace path
+- [ ] **Deploys clean** — `OPENCLAW_DIR=$(mktemp -d) bash lib/deploy-team.sh --team-dir <your-team>`
 - [ ] **README.md** — team-level README explaining purpose, agents, and example VISIONs
 
 ---
@@ -174,6 +181,7 @@ This directory contains starter templates for every file listed above:
 
 | File | Location | Purpose |
 |------|----------|---------|
+| openclaw.json | `openclaw.json` | Single-agent config — extend `agents.list` for more |
 | AGENTS.md | `agents/example-agent/AGENTS.md` | Role-specific workflow template |
 | SOUL.md | `agents/example-agent/SOUL.md` | Personality and beliefs template |
 | IDENTITY.md | `agents/example-agent/IDENTITY.md` | Agent metadata template |
@@ -184,4 +192,7 @@ This directory contains starter templates for every file listed above:
 | BOOTSTRAP.md | `shared/BOOTSTRAP.md` | Canonical first-run setup |
 | standup-log.md | `shared/standup-log.md` | Empty standup log starter |
 
-Copy `agents/example-agent/` four times, rename to your color-role pairs, and fill in each file. Copy `shared/` into your team directory. You are ready to build.
+For a **solo agent**, fill in `agents/example-agent/` and the single entry in
+`openclaw.json`. For a **full team**, copy `agents/example-agent/` once per agent
+(rename to your `color-role` pairs) and add a matching entry to `openclaw.json`
+for each. Copy `shared/` either way. You are ready to build.
