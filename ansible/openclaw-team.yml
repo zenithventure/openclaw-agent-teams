@@ -164,7 +164,7 @@
         {% if (vision is defined) and (vision | length > 0) and ((vision_file is not defined) or (vision_file | length == 0)) %}
         EXTRA+=(--vision {{ vision | quote }})
         {% endif %}
-        # Prefer the team's setup.sh when present — for built-in teams
+        # Prefer the team setup.sh when present — for built-in teams
         # this is a thin shim over the generic deployer, but a team may
         # ship bespoke logic (e.g. modernizer). Pure-data teams fall
         # back to the deployer directly. Mirrors install-team.sh.
