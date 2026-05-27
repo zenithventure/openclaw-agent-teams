@@ -10,6 +10,24 @@ provide.
 
 ---
 
+## Secrets — choosing an approach
+
+For the Ansible **fleet** flow there are three ways to get keys onto hosts,
+in rough order of weight:
+
+| Approach | Keys on disk? | Best for | Where |
+|----------|---------------|----------|-------|
+| **`-e` / env injection** | yes (`~/.openclaw/.env`) | one-off and CI runs | [`ansible/inventory/README.md`](../ansible/inventory/README.md#secrets) |
+| **Ansible Vault** | yes (`~/.openclaw/.env`) | committed per-host secrets in inventory | [`ansible/inventory/README.md`](../ansible/inventory/README.md#secrets) |
+| **Bitwarden Secrets Manager (BWS)** | **no** (resolved at gateway start) | single rotation point, no plaintext on disk | section 1 below |
+
+Vault and `-e` are the defaults for the inventory model and are documented with
+the playbook. BWS (below) is the heavier option when you don't want keys written
+to the droplet at all. **Never commit plaintext keys** in `host_vars` /
+`group_vars` regardless of which you pick.
+
+---
+
 ## 1. Secrets via Bitwarden Secrets Manager (BWS)
 
 Keeps API keys out of `~/.openclaw/.env` entirely. Secrets are resolved at gateway

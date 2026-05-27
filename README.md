@@ -48,6 +48,44 @@ curl -fsSL https://raw.githubusercontent.com/zenithventure/openclaw-agent-teams/
 
 All steps are idempotent — safe to run again if interrupted. See [DO-SETUP.md](DO-SETUP.md) for full options and details.
 
+## Run your own agent as a service
+
+The built-in teams are starting points. The repo is really an **authoring +
+deployment** surface: you point [Claude Code](https://claude.com/claude-code) at
+it to write or edit an agent team (1–N agents), then push that team to one or
+more host VMs and re-run to roll out changes. The bot is *pure data* — you almost
+never write a script.
+
+1. **Clone** the repo onto a control machine (laptop or bastion).
+   ```bash
+   git clone https://github.com/zenithventure/openclaw-agent-teams.git
+   cd openclaw-agent-teams
+   ```
+2. **Author with Claude Code** — open the repo in Claude Code and describe the
+   job: *"create a support agent that triages tickets and escalates refunds."*
+   Claude copies `_template/` to a new team directory and fills in
+   `openclaw.json`, `agents/*`, and `shared/VISION.md` following the authoring
+   contract in [CLAUDE.md](CLAUDE.md). Iterate by asking for changes —
+   *"now have it post a daily summary"* — and Claude edits the same files.
+3. **Deploy** — push the team to a host:
+   - **One host:** `bash lib/deploy-team.sh --team-dir <team-name>` locally, or
+     `install-team.sh --team <team-name>` on the droplet.
+   - **A fleet:** describe your hosts in an Ansible inventory and run the
+     playbook (see [ansible/README.md](ansible/README.md) and
+     [ansible/inventory/README.md](ansible/inventory/README.md)):
+     ```bash
+     ansible-playbook -i ansible/inventory/production ansible/openclaw-team.yml
+     ```
+4. **Iterate** — edit the team's files → re-run the deployer or playbook. The
+   gateway reload picks up new agent files, skills, and config. `USER.md` and
+   `VISION.md` are seeded once so live customizations survive re-deploys (pass
+   `--vision`, or set `vision`/`vision_file` in inventory, to overwrite the
+   mission deliberately).
+
+See [CLAUDE.md](CLAUDE.md) for the full authoring contract (team layout, naming
+convention, `openclaw.json` merge rules, the authoring checklist) and
+[docs/agent-as-a-service-plan.md](docs/agent-as-a-service-plan.md) for the design.
+
 ## Teams
 
 | Folder | Team | Agents | Purpose |

@@ -64,22 +64,22 @@
           {{ repo_local }}/{{ team }}/openclaw.json (file) and
           {{ repo_local }}/{{ team }}/agents/ (dir).
 
-    # A team supports inventory-driven vision iff it deploys via the generic
-    # deployer — either it has no setup.sh (pure data) or its setup.sh is the
-    # thin shim that forwards to lib/deploy-team.sh. A bespoke setup.sh (e.g.
-    # modernizer) keeps its mission in a team-specific shared dir, not
-    # ~/.openclaw/shared, and ignores --vision — so `vision`/`vision_file`
-    # cannot be applied generically there.
-    - name: Detect whether the team supports inventory-driven vision
+    # A team is "generic" iff it deploys via lib/deploy-team.sh — either it has
+    # no setup.sh (pure data) or its setup.sh is the thin shim that forwards to
+    # the deployer. A bespoke setup.sh (e.g. modernizer) keeps its mission in a
+    # team-specific shared dir, ignores --vision, and may deliberately break the
+    # agents/<id> ⇄ openclaw.json id naming convention — so the vision and
+    # structural checks below apply to generic teams only.
+    - name: Detect whether the team uses the generic deployer
       ansible.builtin.set_fact:
-        team_supports_vision: >-
+        team_is_generic: >-
           {{ (not team_stat.results[2].stat.exists)
              or ('deploy-team.sh' in lookup('file', repo_local ~ '/' ~ team ~ '/setup.sh')) }}
 
     - name: Fail if vision is set for a team that can't apply it
       ansible.builtin.assert:
         that:
-          - team_supports_vision | bool
+          - team_is_generic | bool
         fail_msg: >-
           `{{ team }}` ships a bespoke setup.sh that does not understand
           inventory-driven `vision`/`vision_file` — its agents read a
@@ -89,6 +89,40 @@
       when: >-
         (vision is defined and (vision | length > 0))
         or (vision_file is defined and (vision_file | length > 0))
+
+    # Structural sanity (generic teams only): the deployer maps
+    # agents/<id>/ ⇄ openclaw.json agent id. A dir without a matching id is
+    # never registered; an id without a dir registers an agent with no
+    # workspace files. Catch both on the controller before we touch any host.
+    - name: List agent directories on the controller
+      ansible.builtin.find:
+        paths: "{{ repo_local }}/{{ team }}/agents"
+        file_type: directory
+        recurse: false
+      register: agent_dirs
+      delegate_to: localhost
+      become: false
+      when: team_is_generic | bool
+
+    - name: Cross-check agent dirs against openclaw.json ids
+      ansible.builtin.assert:
+        that:
+          - agent_dir_names | symmetric_difference(openclaw_agent_ids) | length == 0
+        fail_msg: >-
+          `{{ team }}` has a mismatch between agents/<id>/ directories and
+          openclaw.json agent ids.
+          Dirs only: {{ agent_dir_names | difference(openclaw_agent_ids) | join(', ') | default('none', true) }}.
+          openclaw.json only: {{ openclaw_agent_ids | difference(agent_dir_names) | join(', ') | default('none', true) }}.
+          Every agents/<id>/ must have a matching `id` in openclaw.json and
+          vice versa (see CLAUDE.md). If this team intentionally breaks the
+          convention, it needs a bespoke setup.sh (like modernizer).
+        success_msg: "agents/ dirs and openclaw.json ids match ({{ openclaw_agent_ids | length }} agents)."
+      vars:
+        agent_dir_names: "{{ agent_dirs.files | map(attribute='path') | map('basename') | list }}"
+        openclaw_agent_ids: >-
+          {{ (lookup('file', repo_local ~ '/' ~ team ~ '/openclaw.json') | from_json).agents.list
+             | map(attribute='id') | list }}
+      when: team_is_generic | bool
 
   tasks:
     # ── Push the current repo to the target ────────────────────────
@@ -155,7 +189,7 @@
         mode: '0644'
       when:
         - vision_file is defined and vision_file | length > 0
-        - team_supports_vision | bool
+        - team_is_generic | bool
 
     # ── Per-host secrets into ~/.openclaw/.env ─────────────────────
     - name: Set provider / channel keys in .env
