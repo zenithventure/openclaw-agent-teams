@@ -1,0 +1,6 @@
+# Defaults for every host in staging. Same shape as
+# production/group_vars/all.yml; see that file for the full annotated set.
+
+# team: operator
+# vision: "Staging vision text..."
+# anthropic_api_key: !vault | ...

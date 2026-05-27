@@ -1,0 +1,20 @@
+# Per-host overrides for example-host-1.example.com.
+#
+# Everything set here takes precedence over group_vars/all.yml. This is
+# the natural place for per-host vision, team, channel, and secrets.
+
+team: operator
+
+# Inline mission statement. For longer mission docs use `vision_file`
+# (path relative to the repo root on the control machine).
+vision: "Operate a small ops desk: triage support tickets, escalate billing issues, and post a daily summary."
+# vision_file: "operator/examples/visions/ops-desk.md"
+
+# Channel binding (uncomment what this host uses). Secret values should
+# come from Ansible Vault or `-e` flags — placeholders shown for shape.
+# anthropic_api_key: "sk-ant-..."
+# telegram_bot_token: "..."
+# discord_bot_token: "..."
+# discord_user_id: "..."
+# slack_app_token: "xapp-..."
+# slack_bot_token: "xoxb-..."

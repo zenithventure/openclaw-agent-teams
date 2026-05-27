@@ -1,58 +1,181 @@
 ---
-# Ansible port of install-team.sh + the team's setup.sh.
+# Inventory-driven team deploy.
 #
-# Deploys a team into ~/.openclaw on a host that already has OpenClaw
-# installed (run after `openclaw install.sh | bash` has been executed
-# as the openclaw user).
+# Reads team / vision / API keys from group_vars + host_vars, rsyncs the
+# current repo to each target, and runs the generic deployer
+# (lib/deploy-team.sh). A team is any top-level directory in the repo
+# with `openclaw.json` + `agents/` — there is no hardcoded allowlist.
 #
 # Usage:
-#   ansible-playbook -i hosts ansible/openclaw-team.yml -l droplets \
-#     -e team=operator -e anthropic_api_key=sk-ant-...
+#   ansible-playbook -i ansible/inventory/production ansible/openclaw-team.yml
+#   ansible-playbook -i ansible/inventory/staging    ansible/openclaw-team.yml \
+#     -l staging-host-1.example.com
 #
-# Variables:
-#   team               — required: accountant|modernizer|operator|product-builder|real-estate|recruiter
-#   anthropic_api_key  — optional; sets ANTHROPIC_API_KEY in ~/.openclaw/.env
-- hosts: all
+# Variables (set in host_vars/group_vars, or override with `-e`):
+#   team               REQUIRED — team directory name (built-in or yours)
+#   vision             optional — inline mission statement
+#   vision_file        optional — path (relative to repo root) to a markdown
+#                      mission file. Wins over `vision` when both set.
+#   anthropic_api_key  optional — sets ANTHROPIC_API_KEY in ~/.openclaw/.env
+#   telegram_bot_token, discord_bot_token, discord_user_id,
+#   slack_app_token, slack_bot_token — optional channel bindings
+- hosts: openclaw_hosts
   become: true
   become_user: openclaw
   gather_facts: true
 
   vars:
-    openclaw_dir: "/home/openclaw/.openclaw"
-    repo_root: "{{ playbook_dir }}/.."
-    valid_teams:
-      - accountant
-      - modernizer
-      - operator
-      - product-builder
-      - real-estate
-      - recruiter
+    openclaw_user: openclaw
+    openclaw_home: /home/openclaw
+    openclaw_dir: "{{ openclaw_home }}/.openclaw"
+    repo_local: "{{ playbook_dir }}/.."
+    repo_remote: "{{ openclaw_home }}/.openclaw-repo"
 
   pre_tasks:
-    - name: Ensure team is set and valid
+    - name: Require `team` to be set
       ansible.builtin.assert:
         that:
           - team is defined
-          - team in valid_teams
+          - team | length > 0
         fail_msg: >-
-          team must be one of: {{ valid_teams | join(', ') }}
+          `team` is required — set it in host_vars/group_vars (e.g.
+          host_vars/<host>.yml) or pass `-e team=<name>`.
+
+    - name: Stat team's required files on the controller
+      ansible.builtin.stat:
+        path: "{{ repo_local }}/{{ team }}/{{ item }}"
+      register: team_stat
+      delegate_to: localhost
+      become: false
+      loop:
+        - openclaw.json
+        - agents
+        - setup.sh
+      loop_control:
+        label: "{{ team }}/{{ item }}"
+
+    - name: Fail if team is not structurally deployable
+      ansible.builtin.assert:
+        that:
+          - team_stat.results[0].stat.exists and (team_stat.results[0].stat.isreg | default(false))
+          - team_stat.results[1].stat.exists and (team_stat.results[1].stat.isdir | default(false))
+        fail_msg: >-
+          `{{ team }}` is not a deployable team — expected both
+          {{ repo_local }}/{{ team }}/openclaw.json (file) and
+          {{ repo_local }}/{{ team }}/agents/ (dir).
+
+    # A team supports inventory-driven vision iff it deploys via the generic
+    # deployer — either it has no setup.sh (pure data) or its setup.sh is the
+    # thin shim that forwards to lib/deploy-team.sh. A bespoke setup.sh (e.g.
+    # modernizer) keeps its mission in a team-specific shared dir, not
+    # ~/.openclaw/shared, and ignores --vision — so `vision`/`vision_file`
+    # cannot be applied generically there.
+    - name: Detect whether the team supports inventory-driven vision
+      ansible.builtin.set_fact:
+        team_supports_vision: >-
+          {{ (not team_stat.results[2].stat.exists)
+             or ('deploy-team.sh' in lookup('file', repo_local ~ '/' ~ team ~ '/setup.sh')) }}
+
+    - name: Fail if vision is set for a team that can't apply it
+      ansible.builtin.assert:
+        that:
+          - team_supports_vision | bool
+        fail_msg: >-
+          `{{ team }}` ships a bespoke setup.sh that does not understand
+          inventory-driven `vision`/`vision_file` — its agents read a
+          team-specific shared dir, not {{ openclaw_dir }}/shared. Set the
+          mission inside the team's own files and drop `vision`/`vision_file`
+          for hosts running this team.
+      when: >-
+        (vision is defined and (vision | length > 0))
+        or (vision_file is defined and (vision_file | length > 0))
 
   tasks:
-    - name: Run the team's setup.sh (handles JSON merge, workspaces, skills)
-      ansible.builtin.shell: "bash {{ repo_root }}/{{ team }}/setup.sh"
+    # ── Push the current repo to the target ────────────────────────
+    - name: Ensure repo dir exists on target (owned by openclaw)
+      become_user: root
+      ansible.builtin.file:
+        path: "{{ repo_remote }}"
+        state: directory
+        owner: "{{ openclaw_user }}"
+        group: "{{ openclaw_user }}"
+        mode: '0755'
+
+    - name: Sync repo from controller to target
+      become: false
+      ansible.posix.synchronize:
+        src: "{{ repo_local }}/"
+        dest: "{{ repo_remote }}/"
+        delete: true
+        rsync_path: "sudo rsync"
+        rsync_opts:
+          - "--exclude=.git"
+          - "--exclude=node_modules"
+          - "--exclude=.env"
+          - "--exclude=*.backup.*"
+          - "--chown={{ openclaw_user }}:{{ openclaw_user }}"
+
+    - name: Ensure ~/.openclaw exists
+      ansible.builtin.file:
+        path: "{{ openclaw_dir }}"
+        state: directory
+        mode: '0700'
+
+    # ── Deploy the team (delegates to lib/deploy-team.sh) ──────────
+    - name: Deploy {{ team }}
+      ansible.builtin.shell: |
+        set -euo pipefail
+        TEAM_DIR="{{ repo_remote }}/{{ team }}"
+        EXTRA=()
+        {% if (vision is defined) and (vision | length > 0) and ((vision_file is not defined) or (vision_file | length == 0)) %}
+        EXTRA+=(--vision {{ vision | quote }})
+        {% endif %}
+        # Prefer the team's setup.sh when present — for built-in teams
+        # this is a thin shim over the generic deployer, but a team may
+        # ship bespoke logic (e.g. modernizer). Pure-data teams fall
+        # back to the deployer directly. Mirrors install-team.sh.
+        if [[ -f "${TEAM_DIR}/setup.sh" ]]; then
+          bash "${TEAM_DIR}/setup.sh" "${EXTRA[@]+"${EXTRA[@]}"}"
+        else
+          bash "{{ repo_remote }}/lib/deploy-team.sh" --team-dir "${TEAM_DIR}" "${EXTRA[@]+"${EXTRA[@]}"}"
+        fi
+      args:
+        executable: /bin/bash
       environment:
-        HOME: /home/openclaw
+        HOME: "{{ openclaw_home }}"
         OPENCLAW_DIR: "{{ openclaw_dir }}"
       changed_when: true
 
-    - name: Set ANTHROPIC_API_KEY in .env (if provided)
+    # Only generic teams reach here with vision_file set (asserted above), so
+    # the generic deployer has already created {{ openclaw_dir }}/shared.
+    - name: Overwrite VISION.md from vision_file
+      ansible.builtin.copy:
+        src: "{{ repo_local }}/{{ vision_file }}"
+        dest: "{{ openclaw_dir }}/shared/VISION.md"
+        mode: '0644'
+      when:
+        - vision_file is defined and vision_file | length > 0
+        - team_supports_vision | bool
+
+    # ── Per-host secrets into ~/.openclaw/.env ─────────────────────
+    - name: Set provider / channel keys in .env
       ansible.builtin.lineinfile:
         path: "{{ openclaw_dir }}/.env"
-        regexp: '^#?\s*ANTHROPIC_API_KEY='
-        line: "ANTHROPIC_API_KEY={{ anthropic_api_key }}"
-        create: true
+        regexp: '^#?\s*{{ item.key }}='
+        line: "{{ item.key }}={{ item.value }}"
         mode: '0600'
-      when: anthropic_api_key is defined and anthropic_api_key | length > 0
+        create: true
+      loop:
+        - { key: ANTHROPIC_API_KEY,   value: "{{ anthropic_api_key   | default('') }}" }
+        - { key: TELEGRAM_BOT_TOKEN,  value: "{{ telegram_bot_token  | default('') }}" }
+        - { key: DISCORD_BOT_TOKEN,   value: "{{ discord_bot_token   | default('') }}" }
+        - { key: DISCORD_USER_ID,     value: "{{ discord_user_id     | default('') }}" }
+        - { key: SLACK_APP_TOKEN,     value: "{{ slack_app_token     | default('') }}" }
+        - { key: SLACK_BOT_TOKEN,     value: "{{ slack_bot_token     | default('') }}" }
+      when: item.value | length > 0
+      loop_control:
+        label: "{{ item.key }}"
+      no_log: true
 
     # ── OpenClaw 3.2 systemd workaround (matches install-team.sh::patch_service) ──
     - name: Patch Telegram groupPolicy to "open"
@@ -64,18 +187,18 @@
 
     - name: Ensure user systemd directory exists
       ansible.builtin.file:
-        path: /home/openclaw/.config/systemd/user
+        path: "{{ openclaw_home }}/.config/systemd/user"
         state: directory
         mode: '0755'
 
     - name: Stat the gateway unit file
       ansible.builtin.stat:
-        path: /home/openclaw/.config/systemd/user/openclaw-gateway.service
+        path: "{{ openclaw_home }}/.config/systemd/user/openclaw-gateway.service"
       register: gateway_unit
 
     - name: Write stub gateway unit (first install only)
       ansible.builtin.copy:
-        dest: /home/openclaw/.config/systemd/user/openclaw-gateway.service
+        dest: "{{ openclaw_home }}/.config/systemd/user/openclaw-gateway.service"
         mode: '0644'
         content: |
           [Unit]
@@ -84,7 +207,7 @@
 
           [Service]
           Type=simple
-          ExecStart=/home/openclaw/.npm-global/bin/openclaw gateway start
+          ExecStart={{ openclaw_home }}/.npm-global/bin/openclaw gateway start
           Restart=on-failure
           RestartSec=5
 
@@ -101,7 +224,7 @@
 
     - name: Let openclaw rewrite the unit file (first install only)
       ansible.builtin.shell: |
-        XDG_RUNTIME_DIR=/run/user/$(id -u) /home/openclaw/.npm-global/bin/openclaw gateway install --force
+        XDG_RUNTIME_DIR=/run/user/$(id -u) {{ openclaw_home }}/.npm-global/bin/openclaw gateway install --force
       when: not gateway_unit.stat.exists
       changed_when: true
       failed_when: false

@@ -1,0 +1,28 @@
+# Defaults for every host in production. Override per-host in
+# host_vars/<hostname>.yml.
+#
+# `team` is the directory name in the repo root (built-in or one you
+# authored). Any directory with openclaw.json + agents/ is deployable.
+
+# team: operator
+
+# Optional defaults shared across hosts. Almost everything below is more
+# naturally set per-host — defaults here are for "every host runs the
+# same team with the same channel" fleets.
+
+# vision: "Operate a small ops desk for ..."
+# vision_file: "operator/examples/visions/ops-desk.md"   # path relative to repo root
+
+# ── Secrets ───────────────────────────────────────────────────────────
+# Prefer Ansible Vault (`ansible-vault encrypt_string ...`) or `-e` /
+# environment injection. Never commit plaintext keys here.
+
+# anthropic_api_key: !vault |
+#   $ANSIBLE_VAULT;1.1;AES256
+#   ...
+
+# telegram_bot_token: ""
+# discord_bot_token: ""
+# discord_user_id: ""
+# slack_app_token: ""
+# slack_bot_token: ""
