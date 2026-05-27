@@ -158,20 +158,42 @@ validate_team() {
     [[ $ERRORS -eq 0 ]] && ok "required agent files present + baseline reference"
 
     # 4. shared/ required files ----------------------------------------------
-    for f in VISION.md STANDARDS.md BOOTSTRAP.md standup-log.md; do
+    # Teams own VISION.md + standup-log.md. STANDARDS.md/BOOTSTRAP.md are
+    # canonical and sourced from _template by the deployer — teams need not
+    # vendor them (see check 5).
+    for f in VISION.md standup-log.md; do
         [[ -f "${dir}/shared/${f}" ]] || err "shared/ missing ${f}"
     done
 
-    # 5. Canonical files unmodified (skip _template, which is the source) ----
-    if [[ "$name" != "_template" ]]; then
+    # 5. Canonical files (STANDARDS.md, BOOTSTRAP.md) -------------------------
+    # Single source of truth is _template/shared. A team should NOT vendor its
+    # own copy; the deployer supplies it. _template itself must carry them, and
+    # any team that does ship an override (e.g. bespoke modernizer) must keep it
+    # byte-identical so there's no drift.
+    if [[ "$name" == "_template" ]]; then
         for f in STANDARDS.md BOOTSTRAP.md; do
-            if [[ -f "${dir}/shared/${f}" && -f "${TEMPLATE_SHARED}/${f}" ]]; then
-                if ! diff -q "${TEMPLATE_SHARED}/${f}" "${dir}/shared/${f}" >/dev/null 2>&1; then
-                    err "shared/${f} differs from _template (canonical — must be byte-identical)"
+            [[ -f "${dir}/shared/${f}" ]] || err "_template/shared/${f} missing (canonical source for every team)"
+        done
+        ok "canonical source files present in _template"
+    else
+        local f drift=false
+        for f in STANDARDS.md BOOTSTRAP.md; do
+            if [[ -f "${dir}/shared/${f}" ]]; then
+                # An override copy must never drift from canonical.
+                if [[ -z "$TEMPLATE_SHARED" ]] || ! diff -q "${TEMPLATE_SHARED}/${f}" "${dir}/shared/${f}" >/dev/null 2>&1; then
+                    err "shared/${f} differs from _template (canonical — make it byte-identical or remove it)"; drift=true
+                elif [[ "$generic" == true ]]; then
+                    # Generic teams don't need it — the deployer supplies it.
+                    warn "shared/${f} is a redundant copy of _template (deployer supplies it) — consider removing"
                 fi
+                # Bespoke teams (modernizer) legitimately vendor their own copy.
+            elif [[ "$generic" == true && ( -z "$TEMPLATE_SHARED" || ! -f "${TEMPLATE_SHARED}/${f}" ) ]]; then
+                err "shared/${f} absent and no _template source — the deploy would skip it"; drift=true
+            elif [[ "$generic" == false ]]; then
+                warn "bespoke team has no shared/${f}; its setup.sh may expect one"
             fi
         done
-        [[ $ERRORS -eq 0 ]] && ok "canonical shared files match _template"
+        [[ "$drift" == false ]] && ok "canonical files resolve cleanly (no drift)"
     fi
 
     # 6. setup.sh syntax (if present) ----------------------------------------

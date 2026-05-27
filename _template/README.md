@@ -25,8 +25,8 @@ team-name/
       HEARTBEAT.md           # Check-in rhythm and schedule
   shared/
     VISION.md                # Mission, success criteria, constraints, priorities
-    STANDARDS.md             # Baseline behavioral rules (canonical — do not edit per team)
-    BOOTSTRAP.md             # First-run setup wizard (canonical — do not edit per team)
+    # STANDARDS.md / BOOTSTRAP.md are NOT vendored — the deployer supplies the
+    # canonical copies from _template/shared. Ship your own only to override.
     standup-log.md           # Agent-maintained standup entries
     skills/                  # Team-specific skill definitions (optional)
       skill-name/
@@ -92,9 +92,9 @@ You may add additional sections (e.g., `## Every Session`, `## Memory`) if the r
 
 ## Shared Files
 
-### STANDARDS.md (canonical)
+### STANDARDS.md (canonical — do NOT vendor)
 
-Located in `shared/STANDARDS.md`. This file is identical across all teams — do not modify it per team. It defines:
+The single copy lives here in `_template/shared/STANDARDS.md`. **Your team should not ship its own** — the deployer (`lib/deploy-team.sh`) copies this canonical file into `~/.openclaw/shared/STANDARDS.md` for every team. It defines:
 
 - Session startup sequence (read SOUL, USER, VISION, memory)
 - Memory management (daily notes, MEMORY.md, memory security)
@@ -103,11 +103,11 @@ Located in `shared/STANDARDS.md`. This file is identical across all teams — do
 - Platform formatting (Discord, WhatsApp, Telegram)
 - Heartbeat vs cron distinction
 
-Copy it from `_template/shared/STANDARDS.md`.
+Ship a `shared/STANDARDS.md` in your team only to deliberately override it — and the validator requires it stay byte-identical to this one, so there's rarely a reason to.
 
-### BOOTSTRAP.md (canonical)
+### BOOTSTRAP.md (canonical — do NOT vendor)
 
-Located in `shared/BOOTSTRAP.md`. Also identical across all teams. It runs once on first boot to configure USER.md and VISION.md, then self-deletes. Copy it from `_template/shared/BOOTSTRAP.md`.
+Same story: the canonical copy is `_template/shared/BOOTSTRAP.md`, supplied to every team by the deployer (seed-once — the agent self-deletes it on first run). It runs once on first boot to configure USER.md and VISION.md. Don't vendor your own.
 
 ### VISION.md (team-specific)
 
@@ -166,11 +166,10 @@ Before deploying a new team, verify:
 - [ ] **USER.md** — present for each agent (placeholder or configured)
 - [ ] **HEARTBEAT.md** — every agent has a check-in schedule relevant to their role
 - [ ] **shared/VISION.md** — has all required sections (even if placeholder)
-- [ ] **shared/STANDARDS.md** — copied from canonical template (not modified)
-- [ ] **shared/BOOTSTRAP.md** — copied from canonical template (not modified)
+- [ ] **shared/STANDARDS.md / BOOTSTRAP.md** — NOT vendored (the deployer supplies them from `_template`)
 - [ ] **shared/standup-log.md** — exists with header
 - [ ] **openclaw.json** — every agent defined with matching `id` and workspace path
-- [ ] **Deploys clean** — `OPENCLAW_DIR=$(mktemp -d) bash lib/deploy-team.sh --team-dir <your-team>`
+- [ ] **Validates** — `bash lib/validate-team.sh --team-dir <your-team> --deploy`
 - [ ] **README.md** — team-level README explaining purpose, agents, and example VISIONs
 
 ---
@@ -188,11 +187,12 @@ This directory contains starter templates for every file listed above:
 | USER.md | `agents/example-agent/USER.md` | Human operator info template |
 | HEARTBEAT.md | `agents/example-agent/HEARTBEAT.md` | Check-in schedule template |
 | VISION.md | `shared/VISION.md` | Team mission and goals template |
-| STANDARDS.md | `shared/STANDARDS.md` | Canonical behavioral standards |
-| BOOTSTRAP.md | `shared/BOOTSTRAP.md` | Canonical first-run setup |
+| STANDARDS.md | `shared/STANDARDS.md` | Canonical behavioral standards — **the deployer's source; don't copy into your team** |
+| BOOTSTRAP.md | `shared/BOOTSTRAP.md` | Canonical first-run setup — **the deployer's source; don't copy into your team** |
 | standup-log.md | `shared/standup-log.md` | Empty standup log starter |
 
 For a **solo agent**, fill in `agents/example-agent/` and the single entry in
 `openclaw.json`. For a **full team**, copy `agents/example-agent/` once per agent
 (rename to your `color-role` pairs) and add a matching entry to `openclaw.json`
-for each. Copy `shared/` either way. You are ready to build.
+for each. Copy `shared/VISION.md` and `shared/standup-log.md` either way — but
+**not** `STANDARDS.md`/`BOOTSTRAP.md` (the deployer supplies those). You are ready to build.
