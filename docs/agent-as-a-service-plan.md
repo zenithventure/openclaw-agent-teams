@@ -7,7 +7,9 @@ update that bot across one or more host VMs.
 
 **Status:** Phase 1 shipped (PR
 [#38](https://github.com/zenithventure/openclaw-agent-teams/pull/38)). Phase 2
-shipped on branch `claude/openclaw-ansible-fleet-phase2`. Phase 3 is open.
+shipped (PR [#39](https://github.com/zenithventure/openclaw-agent-teams/pull/39)).
+Phase 3 shipped on branch `claude/openclaw-phase3-secrets-docs`. **All phases
+complete.**
 
 > Other sessions: read [`../CLAUDE.md`](../CLAUDE.md) first (the authoring
 > contract), then continue from the next unchecked phase below.
@@ -106,18 +108,33 @@ tempdir; bash array idiom `${EXTRA[@]+"${EXTRA[@]}"}` verified under
 `set -euo pipefail`. Full `ansible-playbook --check` against a live target
 is still owed (no Ansible in the sandbox where this was authored).
 
-## Phase 3 — secrets, docs, polish  ⬜ TODO
+## Phase 3 — secrets, docs, polish  ✅ DONE
 
-1. **Secrets guidance:** recommend **Ansible Vault** for committed secrets or
-   `-e` / env injection; cross-link the **BWS pattern** already sketched in
-   `docs/advanced.md`. Never commit plaintext keys in `host_vars`.
+Shipped on `claude/openclaw-phase3-secrets-docs`. Summary:
+
+1. **Secrets guidance:** `docs/advanced.md` now opens with a "choosing an
+   approach" table comparing `-e` injection, Ansible Vault, and BWS (keys off
+   disk), cross-linking the Vault / `-e` guidance in
+   `ansible/inventory/README.md#secrets` (added in Phase 2) so the BWS doc is no
+   longer an island. "Never commit plaintext keys" reinforced.
 2. **Docs:**
-   - README section **"Run your own agent as a service"** (clone → author with
-     Claude → deploy → iterate).
-   - Update `ansible/README.md` for the inventory model (replace the ad-hoc
-     `-i hosts -e team=` examples).
-3. **Optional:** a deploy-time structural sanity assert in the playbook (team has
-   `openclaw.json` + `agents/`, every `agents/<id>` has an `openclaw.json` entry).
+   - Top-level `README.md` gained a **"Run your own agent as a service"**
+     section (clone → author with Claude → deploy single-host/fleet → iterate),
+     linking `CLAUDE.md` and this plan.
+   - `ansible/README.md` was already reworked for the inventory model in Phase 2
+     (no ad-hoc `-i hosts -e team=` examples remain).
+3. **Structural sanity assert:** `openclaw-team.yml` pre_tasks now cross-check
+   `agents/<id>/` dirs against `openclaw.json` ids (symmetric difference must be
+   empty) on the controller before touching any host. Gated to *generic* teams
+   via the `team_is_generic` fact (the same detection that gates vision), so
+   `modernizer`'s deliberate convention break is exempt. The `team_supports_vision`
+   fact from Phase 2 was generalized to `team_is_generic` and now drives both the
+   vision and structural checks.
+
+Validation done: YAML parses; the agents/id cross-check verified against all
+built-in teams (7 generic teams MATCH, modernizer correctly skipped). Full
+`ansible-playbook --check` against a live host still owed (no Ansible in the
+authoring sandbox) — same caveat as Phase 2.
 
 ---
 
