@@ -21,14 +21,21 @@ need to write a shell script.
 
 ## What a team is
 
-A team is a top-level directory containing an `openclaw.json` and an `agents/`
-folder. It holds **1 to N agents**. A single-agent team is completely valid — the
-four-color DISC model used by the built-in teams is a useful *pattern*, not a
-requirement. Author as many agents as the job needs.
+A team is a top-level directory containing an `agents/` folder (and usually an
+`openclaw.json`). It holds **1 to N agents**. A single-agent team is completely
+valid — the four-color DISC model used by the built-in teams is a useful
+*pattern*, not a requirement. Author as many agents as the job needs.
+
+For a **uniform team** — one whose config is fully implied by its `agents/` dirs
+— you can omit `openclaw.json` entirely: the deployer synthesizes a default
+(each `agents/<id>/` → an agent with id `<id>`, a Title-Cased name, workspace
+`~/.openclaw/workspace-<id>`, subagents `["*"]`, agent-to-agent enabled for all
+ids). Ship an explicit `openclaw.json` only to customize names, tools, or
+permissions.
 
 ```
 <team-name>/
-  openclaw.json            # REQUIRED — agent definitions, tool perms, skills config
+  openclaw.json            # OPTIONAL — synthesized from agents/ if absent; ship to customize
   agents/                  # REQUIRED — one directory per agent
     <agent-id>/
       IDENTITY.md          # name, type, role (quick-reference card)
@@ -74,7 +81,10 @@ modernizer as a template; copy `_template/` or one of the four-color teams.
 
 ## openclaw.json conventions
 
-Minimum viable config (single agent):
+You only need this file to **customize** beyond the synthesized default (custom
+agent names, tool permissions, agent-to-agent allowlists, skills dirs). A
+uniform team can omit it. When you do ship one, this is the minimum viable
+config (single agent):
 
 ```json
 {
@@ -158,7 +168,8 @@ missing required files, missing `> **Baseline:**` line, canonical files edited,
 `setup.sh` syntax). Warnings (e.g. a missing `## Core Workflow`/`## Safety`
 heading) are advisory. The manual checklist, for reference:
 
-- [ ] `openclaw.json` exists; every `agents/<id>/` has a matching `id` + `workspace`.
+- [ ] `agents/` exists with 1+ agent dirs. `openclaw.json` is optional; if you
+      ship one, every `agents/<id>/` must have a matching `id` + `workspace`.
 - [ ] 1+ agents; each has IDENTITY, SOUL, AGENTS, HEARTBEAT, USER.
 - [ ] Every `AGENTS.md` starts with the `> **Baseline:**` line and has Core
       Workflow + Safety.

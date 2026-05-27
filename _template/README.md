@@ -13,7 +13,7 @@ A team holds **1 to N agents**. A single agent is completely valid; the four-col
 ```
 team-name/
   README.md                  # Team overview (for humans browsing the repo) — optional
-  openclaw.json              # REQUIRED — agent definitions, tool permissions, skill config
+  openclaw.json              # OPTIONAL — synthesized from agents/ if absent; ship it to customize names/tools/perms
   setup.sh                   # OPTIONAL — thin shim over lib/deploy-team.sh (built-in teams have one)
   env.template               # OPTIONAL — custom .env with extra provider/service keys
   agents/                    # REQUIRED — one directory per agent (1..N)
@@ -168,7 +168,7 @@ Before deploying a new team, verify:
 - [ ] **shared/VISION.md** — has all required sections (even if placeholder)
 - [ ] **shared/STANDARDS.md / BOOTSTRAP.md** — NOT vendored (the deployer supplies them from `_template`)
 - [ ] **shared/standup-log.md** — exists with header
-- [ ] **openclaw.json** — every agent defined with matching `id` and workspace path
+- [ ] **openclaw.json** — OPTIONAL (synthesized from `agents/` if absent); if shipped, every agent has a matching `id` + workspace path
 - [ ] **Validates** — `bash lib/validate-team.sh --team-dir <your-team> --deploy`
 - [ ] **README.md** — team-level README explaining purpose, agents, and example VISIONs
 

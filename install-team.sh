@@ -154,7 +154,7 @@ clone_repo() {
 list_available_teams() {
     local d
     for d in "${CLONE_DIR}"/*/; do
-        if [[ -f "${d}openclaw.json" && -d "${d}agents" ]]; then
+        if [[ -d "${d}agents" ]]; then
             echo "    - $(basename "$d")"
         fi
     done
@@ -164,10 +164,11 @@ list_available_teams() {
 run_team_deploy() {
     local team_dir="${CLONE_DIR}/${TEAM}"
 
-    # Structural validation: a team is any dir with openclaw.json + agents/.
-    if [[ ! -f "${team_dir}/openclaw.json" || ! -d "${team_dir}/agents" ]]; then
+    # Structural validation: a team is any dir with agents/ (openclaw.json is
+    # optional — the deployer synthesizes one from agents/ when absent).
+    if [[ ! -d "${team_dir}/agents" ]]; then
         log_err "Not a deployable team: ${TEAM}"
-        echo "  (a team directory needs openclaw.json and agents/)"
+        echo "  (a team directory needs an agents/ dir)"
         echo ""
         echo "  Available teams:"
         list_available_teams

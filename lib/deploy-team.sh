@@ -80,14 +80,11 @@ if [[ -z "$TEAM_DIR" || ! -d "$TEAM_DIR" ]]; then
     log_err "Team directory not found"
     exit 1
 fi
-if [[ ! -f "${TEAM_DIR}/openclaw.json" ]]; then
-    log_err "Not a team directory (missing openclaw.json): ${TEAM_DIR}"
-    exit 1
-fi
 if [[ ! -d "${TEAM_DIR}/agents" ]]; then
     log_err "Not a team directory (missing agents/): ${TEAM_DIR}"
     exit 1
 fi
+# openclaw.json is optional — synthesized from agents/ below when absent.
 
 TEAM_NAME="$(basename "$TEAM_DIR")"
 OPENCLAW_DIR="${OPENCLAW_DIR:-$HOME/.openclaw}"
@@ -122,13 +119,46 @@ if [[ ${#AGENT_DIRS[@]} -eq 0 ]]; then
     exit 1
 fi
 
-# Agent ids (for JSON merge / removal) come from openclaw.json so
-# teams whose ids differ from their dir names still work.
 have_node=false
 command -v node &>/dev/null && have_node=true
 
+# openclaw.json is optional: a "uniform" team (config fully implied by its
+# agents/ dirs) can omit it and the deployer synthesizes a default — each
+# agents/<id>/ becomes an agent { id, name, workspace, subagents:["*"] }, with
+# agent-to-agent enabled for all ids and the standard skills dir. Ship an
+# explicit openclaw.json only for custom names, tools, or permissions.
+TMP_JSON_DIR=""
+cleanup_tmp() { [[ -n "$TMP_JSON_DIR" && -d "$TMP_JSON_DIR" ]] && rm -rf "$TMP_JSON_DIR"; return 0; }
+trap cleanup_tmp EXIT
+
+INCOMING_JSON="${TEAM_DIR}/openclaw.json"
+if [[ ! -f "$INCOMING_JSON" ]]; then
+    if [[ "$have_node" != true ]]; then
+        log_err "openclaw.json is missing and node is unavailable to synthesize one"
+        exit 1
+    fi
+    # Write to <tmpdir>/openclaw.json so require() resolves it by extension.
+    TMP_JSON_DIR="$(mktemp -d)"
+    INCOMING_JSON="${TMP_JSON_DIR}/openclaw.json"
+    local_ids_csv="$(printf '"%s",' "${AGENT_DIRS[@]}")"; local_ids_csv="[${local_ids_csv%,}]"
+    # name: strip a leading DISC color, split on -/_ , Title Case (red-strategist → "Strategist").
+    IDS_CSV="$local_ids_csv" node -e '
+const fs=require("fs");
+const ids=JSON.parse(process.env.IDS_CSV);
+const title=s=>s.replace(/^(red|yellow|green|blue)-/,"").split(/[-_]/).filter(Boolean)
+  .map(w=>w[0].toUpperCase()+w.slice(1)).join(" ")||s;
+const list=ids.map(id=>({id,name:title(id),workspace:"~/.openclaw/workspace-"+id,subagents:{allowAgents:["*"]}}));
+const cfg={agents:{defaults:{compaction:{mode:"safeguard"},maxConcurrent:4,subagents:{maxConcurrent:8}},list},
+  tools:{agentToAgent:{enabled:true,allow:ids}},skills:{load:{extraDirs:["~/.openclaw/skills"]}}};
+fs.writeFileSync(process.argv[1],JSON.stringify(cfg,null,2)+"\n");
+' "$INCOMING_JSON"
+    log_warn "openclaw.json synthesized from agents/ (${#AGENT_DIRS[@]} agents) — ship one to customize"
+fi
+
+# Agent ids (for JSON merge / removal) come from the config so teams whose ids
+# differ from their dir names still work.
 agent_ids_json() {
-    node -e "const c=require('${TEAM_DIR}/openclaw.json'); (c.agents?.list||[]).forEach(a=>console.log(a.id))"
+    node -e "const c=require('${INCOMING_JSON}'); (c.agents?.list||[]).forEach(a=>console.log(a.id))"
 }
 
 AGENT_IDS=()
@@ -240,7 +270,7 @@ create_directories() {
 deploy_config() {
     log_step "Deploying openclaw.json..."
     local config_file="${OPENCLAW_DIR}/openclaw.json"
-    local incoming="${TEAM_DIR}/openclaw.json"
+    local incoming="${INCOMING_JSON}"
 
     if [[ -f "${config_file}" ]]; then
         cp "${config_file}" "${config_file}.backup.$(date +%Y%m%d%H%M%S)"
@@ -445,7 +475,7 @@ print_summary() {
     echo -e "${BOLD}Team:${NC} ${TEAM_NAME}  (${#AGENT_DIRS[@]} agents, ${#SKILL_SRCS[@]} skills)"
     if [[ "$have_node" == true ]]; then
         echo -e "${BOLD}Agents:${NC}"
-        node -e "const c=require('${TEAM_DIR}/openclaw.json'); (c.agents?.list||[]).forEach(a=>console.log('  ● '+(a.name||a.id)+'  ('+a.id+')'))"
+        node -e "const c=require('${INCOMING_JSON}'); (c.agents?.list||[]).forEach(a=>console.log('  ● '+(a.name||a.id)+'  ('+a.id+')'))"
     fi
     echo ""
     echo -e "${BOLD}Directory:${NC} ${OPENCLAW_DIR}/"
