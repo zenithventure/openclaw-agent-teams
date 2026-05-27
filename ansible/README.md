@@ -1,20 +1,21 @@
 # Ansible (optional)
 
-The shell scripts at the repo root (`bootstrap.sh`, `install-team.sh`, and each
-team's `setup.sh`) are the primary deployment path. The two playbooks here
-mirror the same flow for power users running against a fleet of droplets.
+The shell scripts at the repo root (`bootstrap.sh`, `install-team.sh`, and
+the team `setup.sh`s) are the primary deployment path. The two playbooks
+here mirror the same flow declaratively for fleets of hosts.
 
 If you're deploying a single droplet, **use the shell flow** — open
-[DO-SETUP.md](../DO-SETUP.md). If you're deploying many droplets, or you want
-declarative inventory, use these playbooks.
+[DO-SETUP.md](../DO-SETUP.md). If you're deploying many hosts, or you
+want declarative inventory + per-host overrides, use these playbooks.
 
 ---
 
 ## Requirements
 
-- Ansible 2.14+
-- A target inventory with SSH access as a sudo-capable user
-- Ubuntu 24.04 on the targets
+- Ansible 2.14+ with the `ansible.posix` collection installed
+  (`ansible-galaxy collection install ansible.posix`)
+- `rsync` on the control machine and on the targets
+- Targets running Ubuntu 24.04 with SSH access as a sudo-capable user
 
 ---
 
@@ -22,13 +23,13 @@ declarative inventory, use these playbooks.
 
 ### `bootstrap.yml`
 
-Equivalent to `bootstrap.sh` — hardens the server, creates the `openclaw` and
-`claude` users, installs Node.js 22, and provisions Caddy with TLS.
+Equivalent to `bootstrap.sh` — hardens the server, creates the `openclaw`
+and `claude` users, installs Node.js 22, and provisions Caddy with TLS.
 
 Run as root (or via `become: true`):
 
 ```bash
-ansible-playbook -i hosts ansible/bootstrap.yml -l droplets \
+ansible-playbook -i ansible/inventory/production ansible/bootstrap.yml \
   -e admin_user=szewong \
   -e domain=teams.example.com
 ```
@@ -40,26 +41,54 @@ Variables:
 
 ### `openclaw-team.yml`
 
-Equivalent to running `install-team.sh --team <name>` as the `openclaw` user.
-Deploys agent workspaces, merges `openclaw.json`, and reloads the gateway.
+Inventory-driven team deploy. Reads `team`, `vision` / `vision_file`, and
+provider/channel secrets from your inventory (group_vars + host_vars),
+rsyncs the current repo to each target, and runs the generic deployer
+(`lib/deploy-team.sh`). Any team directory in the repo with
+`openclaw.json` + `agents/` is deployable — no allowlist.
 
 ```bash
-ansible-playbook -i hosts ansible/openclaw-team.yml -l droplets \
-  -e team=operator \
-  -e anthropic_api_key=sk-ant-…
+# Whole production fleet
+ansible-playbook -i ansible/inventory/production ansible/openclaw-team.yml
+
+# One host
+ansible-playbook -i ansible/inventory/production ansible/openclaw-team.yml \
+  -l example-host-1.example.com
+
+# Inline overrides for a one-off run
+ansible-playbook -i ansible/inventory/production ansible/openclaw-team.yml \
+  -e team=operator -e anthropic_api_key=sk-ant-...
 ```
 
-Variables:
-- `team` — required; one of `accountant`, `modernizer`, `operator`,
-  `product-builder`, `real-estate`, `recruiter`
-- `anthropic_api_key` — optional; sets `ANTHROPIC_API_KEY` in `~/.openclaw/.env`
+Variables (set in `host_vars/<host>.yml`, `group_vars/all.yml`, or `-e`):
+
+| Variable | Required | Notes |
+|----------|----------|-------|
+| `team` | yes | Top-level directory in the repo with `openclaw.json` + `agents/` |
+| `vision` | no | Inline mission statement |
+| `vision_file` | no | Path (relative to repo root) to a markdown mission file — wins over `vision` |
+| `anthropic_api_key` | no\* | Sets `ANTHROPIC_API_KEY` in `~/.openclaw/.env`. \*Required for the gateway to work |
+| `telegram_bot_token`, `discord_bot_token`, `discord_user_id`, `slack_app_token`, `slack_bot_token` | no | Channel bindings — only set what each host uses |
+
+See [`inventory/README.md`](inventory/README.md) for the full layout,
+layering rules, and secrets guidance (Ansible Vault / `-e` injection).
+
+---
+
+## Iteration loop
+
+Edit team data in the repo → `ansible-playbook -i ansible/inventory/...
+ansible/openclaw-team.yml` → bots update on every targeted host. The
+playbook rsyncs the repo (excluding `.git`, `.env`, backups), re-runs
+the deployer (idempotent), then reloads the gateway. A no-change run is
+a near-no-op diff.
 
 ---
 
 ## What lives where
 
-| Need                     | Use                                                       |
-| ------------------------ | --------------------------------------------------------- |
-| One-droplet deploy       | `bootstrap.sh` + `install-team.sh` (the headline flow)    |
-| Fleet deploy             | These playbooks                                           |
-| BWS secrets / state backup | See [`../docs/advanced.md`](../docs/advanced.md) — both patterns ship in `~/git/DigitalOcean_setup/openclaw` |
+| Need                       | Use                                                                                  |
+| -------------------------- | ------------------------------------------------------------------------------------ |
+| One-host deploy            | `bootstrap.sh` + `install-team.sh` (the headline flow)                               |
+| Fleet deploy               | These playbooks + `ansible/inventory/`                                               |
+| BWS secrets / state backup | [`../docs/advanced.md`](../docs/advanced.md) — both patterns ship in `~/git/DigitalOcean_setup/openclaw` |

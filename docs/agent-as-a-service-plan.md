@@ -6,8 +6,8 @@ agent definition (1–N agents), and uses the deployer + **Ansible** to push and
 update that bot across one or more host VMs.
 
 **Status:** Phase 1 shipped (PR
-[#38](https://github.com/zenithventure/openclaw-agent-teams/pull/38), branch
-`claude/openclaw-agent-service-plan-8IYJw`). Phases 2–3 are open.
+[#38](https://github.com/zenithventure/openclaw-agent-teams/pull/38)). Phase 2
+shipped on branch `claude/openclaw-ansible-fleet-phase2`. Phase 3 is open.
 
 > Other sessions: read [`../CLAUDE.md`](../CLAUDE.md) first (the authoring
 > contract), then continue from the next unchecked phase below.
@@ -70,43 +70,41 @@ Validation done: all 8 teams deploy to temp dirs; idempotency, cross-team merge,
 
 ---
 
-## Phase 2 — Ansible fleet inventory + update loop  ⬜ TODO
+## Phase 2 — Ansible fleet inventory + update loop  ✅ DONE
 
-Goal: edit repo files → `ansible-playbook` → bots update on one or more VMs,
-with per-host config (vision, API key, channel) layered over group defaults.
+Shipped on `claude/openclaw-ansible-fleet-phase2`. Summary:
 
-Steps:
+- **`ansible/inventory/{production,staging}/`** committed example tree with
+  `hosts.yml`, `group_vars/all.yml`, `host_vars/<host>.yml`. Self-documenting
+  placeholders, plus `inventory/README.md` covering layering and secrets.
+- **`ansible/openclaw-team.yml`** rewritten:
+  - Dropped the `valid_teams` allowlist; pre_tasks now stat
+    `{{ repo_root }}/{{ team }}/openclaw.json` and `agents/` on the controller
+    and assert structurally.
+  - Reads `team`, `vision` / `vision_file`, `anthropic_api_key`, and channel
+    tokens (`telegram_bot_token`, `discord_bot_token`, `discord_user_id`,
+    `slack_app_token`, `slack_bot_token`) from group/host vars.
+  - **rsyncs the controller repo to the target** at
+    `/home/openclaw/.openclaw-repo` (via `sudo rsync` + `--chown`), excluding
+    `.git`, `.env`, backups, node_modules. This is what makes
+    edit-repo→re-run-playbook work without a manual clone.
+  - Deploys via the team's `setup.sh` when present (so `modernizer/` still
+    works), else `lib/deploy-team.sh --team-dir …` — mirroring
+    `install-team.sh`. `--vision` is passed inline when set.
+  - `vision_file` (path relative to repo root on the controller) overwrites
+    `~/.openclaw/shared/VISION.md` after deploy, taking precedence over
+    `vision` for longer mission docs.
+  - `.env` keys set via `lineinfile` with `no_log: true`.
+  - Existing service patch + reload steps preserved.
+- **`ansible/README.md`** rewritten around the inventory model — drops the
+  hardcoded team list, shows `-i ansible/inventory/production`, links to
+  `inventory/README.md`.
 
-1. **Add a committed inventory tree** under `ansible/inventory/`:
-   ```
-   ansible/inventory/
-     production/
-       hosts.yml                 # host groups
-       group_vars/all.yml        # defaults: team, model, channel
-       group_vars/<group>.yml    # per-group overrides
-       host_vars/<host>.yml      # per-host: vision/vision_file, api key ref, channel token
-     staging/ ...
-   ```
-   Ship example files (with placeholder hosts) so the structure is self-documenting.
-2. **Rework `ansible/openclaw-team.yml`:**
-   - Remove the hardcoded `valid_teams` assert (`ansible/openclaw-team.yml:23`);
-     validate structurally that `{{ repo_root }}/{{ team }}/openclaw.json` and
-     `agents/` exist.
-   - Read `team`, `vision` / `vision_file`, `anthropic_api_key`, and channel
-     tokens from group/host vars instead of only `-e team=`.
-   - Deploy via `bash {{ repo_root }}/lib/deploy-team.sh --team-dir
-     {{ repo_root }}/{{ team }}` (replaces the current `run the team's setup.sh`
-     shell task, but keep working for modernizer — prefer team `setup.sh` if
-     present, else the lib, mirroring `install-team.sh`).
-   - Write `VISION.md` from `vision_file`/`vision`; set `.env` keys; reload the
-     gateway (existing reload logic at `ansible/openclaw-team.yml:95` is fine).
-   - Keep it idempotent so re-runs = updates. Declarative agent files refresh;
-     `USER.md`/`VISION.md` seed-once unless explicitly overridden.
-3. **Per-host config layering:** `host_vars/<host>.yml` provides `vision` (inline)
-   or `vision_file` (committed, e.g. under the team's `examples/`), `team`,
-   `channel` + token, and an API-key reference.
-4. **Verify:** dry-run with `--check`; deploy to a throwaway host or container;
-   confirm `-l <host>` targets a subset and a second run is a no-op diff.
+Validation done: YAML parses for all new/changed playbook + inventory files;
+`lib/deploy-team.sh --team-dir _template` + `--vision …` smoke-tested in a
+tempdir; bash array idiom `${EXTRA[@]+"${EXTRA[@]}"}` verified under
+`set -euo pipefail`. Full `ansible-playbook --check` against a live target
+is still owed (no Ansible in the sandbox where this was authored).
 
 ## Phase 3 — secrets, docs, polish  ⬜ TODO
 
