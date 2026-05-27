@@ -33,14 +33,21 @@ inventory/
 | Variable             | Typical location                 | Notes |
 |----------------------|----------------------------------|-------|
 | `team`               | `host_vars/<host>.yml` (or `group_vars/all.yml` for uniform fleets) | Name of a directory in the repo root with `openclaw.json` + `agents/`. |
-| `vision`             | `host_vars/<host>.yml`           | Inline mission statement string. |
-| `vision_file`        | `host_vars/<host>.yml`           | Path relative to repo root on the control machine; copied verbatim to `~/.openclaw/shared/VISION.md`. |
+| `vision`             | `host_vars/<host>.yml`           | Inline mission statement string. Generic/data teams only (see note). |
+| `vision_file`        | `host_vars/<host>.yml`           | Path relative to repo root on the control machine; copied verbatim to `~/.openclaw/shared/VISION.md`. Generic/data teams only. |
 | `anthropic_api_key`  | Ansible Vault or `-e` flag       | Required for the gateway to talk to Anthropic. |
 | `telegram_bot_token`, `discord_bot_token`, `discord_user_id`, `slack_app_token`, `slack_bot_token` | Vault / host_vars | Channel bindings. Only set the ones this host uses. |
 
 `vision_file` wins over `vision` when both are set. Both layer over the
 `shared/VISION.md` the team ships, and re-running the playbook is how you
 push edits to the fleet.
+
+> **`vision`/`vision_file` apply to generic (data) teams only.** A team with a
+> bespoke `setup.sh` that does not forward to `lib/deploy-team.sh` (currently
+> only `modernizer`) stores its mission in a team-specific shared dir, not
+> `~/.openclaw/shared`, and ignores `--vision`. The playbook asserts and fails
+> early if you set `vision`/`vision_file` for such a team — set the mission in
+> that team's own files instead.
 
 ---
 

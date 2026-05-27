@@ -65,10 +65,16 @@ Variables (set in `host_vars/<host>.yml`, `group_vars/all.yml`, or `-e`):
 | Variable | Required | Notes |
 |----------|----------|-------|
 | `team` | yes | Top-level directory in the repo with `openclaw.json` + `agents/` |
-| `vision` | no | Inline mission statement |
-| `vision_file` | no | Path (relative to repo root) to a markdown mission file — wins over `vision` |
+| `vision` | no | Inline mission statement (generic/data teams only — see note) |
+| `vision_file` | no | Path (relative to repo root) to a markdown mission file — wins over `vision` (generic/data teams only) |
 | `anthropic_api_key` | no\* | Sets `ANTHROPIC_API_KEY` in `~/.openclaw/.env`. \*Required for the gateway to work |
 | `telegram_bot_token`, `discord_bot_token`, `discord_user_id`, `slack_app_token`, `slack_bot_token` | no | Channel bindings — only set what each host uses |
+
+> **`vision`/`vision_file` apply to generic (data) teams only.** A team with a
+> bespoke `setup.sh` that does not forward to `lib/deploy-team.sh` (currently
+> only `modernizer`) keeps its mission in a team-specific shared dir, not
+> `~/.openclaw/shared`. The playbook fails fast if you set `vision`/`vision_file`
+> for such a team — set the mission inside that team's own files instead.
 
 See [`inventory/README.md`](inventory/README.md) for the full layout,
 layering rules, and secrets guidance (Ansible Vault / `-e` injection).

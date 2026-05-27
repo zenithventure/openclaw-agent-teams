@@ -50,6 +50,7 @@
       loop:
         - openclaw.json
         - agents
+        - setup.sh
       loop_control:
         label: "{{ team }}/{{ item }}"
 
@@ -62,6 +63,32 @@
           `{{ team }}` is not a deployable team — expected both
           {{ repo_local }}/{{ team }}/openclaw.json (file) and
           {{ repo_local }}/{{ team }}/agents/ (dir).
+
+    # A team supports inventory-driven vision iff it deploys via the generic
+    # deployer — either it has no setup.sh (pure data) or its setup.sh is the
+    # thin shim that forwards to lib/deploy-team.sh. A bespoke setup.sh (e.g.
+    # modernizer) keeps its mission in a team-specific shared dir, not
+    # ~/.openclaw/shared, and ignores --vision — so `vision`/`vision_file`
+    # cannot be applied generically there.
+    - name: Detect whether the team supports inventory-driven vision
+      ansible.builtin.set_fact:
+        team_supports_vision: >-
+          {{ (not team_stat.results[2].stat.exists)
+             or ('deploy-team.sh' in lookup('file', repo_local ~ '/' ~ team ~ '/setup.sh')) }}
+
+    - name: Fail if vision is set for a team that can't apply it
+      ansible.builtin.assert:
+        that:
+          - team_supports_vision | bool
+        fail_msg: >-
+          `{{ team }}` ships a bespoke setup.sh that does not understand
+          inventory-driven `vision`/`vision_file` — its agents read a
+          team-specific shared dir, not {{ openclaw_dir }}/shared. Set the
+          mission inside the team's own files and drop `vision`/`vision_file`
+          for hosts running this team.
+      when: >-
+        (vision is defined and (vision | length > 0))
+        or (vision_file is defined and (vision_file | length > 0))
 
   tasks:
     # ── Push the current repo to the target ────────────────────────
@@ -119,12 +146,16 @@
         OPENCLAW_DIR: "{{ openclaw_dir }}"
       changed_when: true
 
+    # Only generic teams reach here with vision_file set (asserted above), so
+    # the generic deployer has already created {{ openclaw_dir }}/shared.
     - name: Overwrite VISION.md from vision_file
       ansible.builtin.copy:
         src: "{{ repo_local }}/{{ vision_file }}"
         dest: "{{ openclaw_dir }}/shared/VISION.md"
         mode: '0644'
-      when: vision_file is defined and vision_file | length > 0
+      when:
+        - vision_file is defined and vision_file | length > 0
+        - team_supports_vision | bool
 
     # ── Per-host secrets into ~/.openclaw/.env ─────────────────────
     - name: Set provider / channel keys in .env
