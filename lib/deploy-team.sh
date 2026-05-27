@@ -302,6 +302,13 @@ deploy_shared_files() {
     for entry in "${TEAM_DIR}/shared"/*; do
         base="$(basename "$entry")"
         [[ "$base" == "skills" || "$base" == "BOOTSTRAP.md" ]] && continue
+        # VISION.md: seed-once so live mission edits survive re-deploys (the
+        # operator owns it once seeded). Overwrite deliberately with --vision
+        # (handled below) — not on every deploy.
+        if [[ "$base" == "VISION.md" && -f "${OPENCLAW_DIR}/shared/VISION.md" ]]; then
+            log_ok "VISION.md skipped (preserving live mission — use --vision to overwrite)"
+            continue
+        fi
         if [[ -d "$entry" ]]; then
             mkdir -p "${OPENCLAW_DIR}/shared/${base}"
             cp -R "${entry}/." "${OPENCLAW_DIR}/shared/${base}/"
