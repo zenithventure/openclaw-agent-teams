@@ -41,6 +41,8 @@ curl -fsSL https://openclaw.ai/install.sh | bash
 
 The installer runs onboarding automatically — you'll choose your messaging channel, enter your Telegram/Discord token, API key, etc.
 
+> **Choosing your model.** Onboarding is also where you pick the **AI provider and model** — the model choice is entirely yours (Claude, OpenRouter, OpenAI, a local model, etc.); nothing here requires a particular one. To see what you ended up on, check `model.primary` in `~/.openclaw/openclaw.json` or the `[gateway] agent model: …` line in `openclaw gateway logs`. To change it later, edit `model.primary` in `~/.openclaw/openclaw.json` (and make sure the matching provider key is set), then restart the gateway.
+
 #### Step 3 — Deploy team (still as openclaw user)
 
 ```bash

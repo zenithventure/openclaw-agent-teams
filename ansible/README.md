@@ -12,9 +12,15 @@ want declarative inventory + per-host overrides, use these playbooks.
 
 ## Requirements
 
-- Ansible 2.14+ with the `ansible.posix` collection installed
-  (`ansible-galaxy collection install ansible.posix`)
-- `rsync` on the control machine and on the targets
+- **Ansible** — tested on ansible-core 2.20. Install the required collections
+  with `ansible-galaxy collection install -r ansible/requirements.yml`
+  (`ansible.posix` for `synchronize`, `community.general` for `ufw`).
+- **GNU `rsync` on the control machine** — `openclaw-team.yml`'s `synchronize`
+  task passes `--chown`, which macOS's default **openrsync** rejects
+  (`rsync: unrecognized option '--chown'`). On macOS: `brew install rsync`, then
+  make sure it precedes `/usr/bin/rsync` on `PATH` — e.g. run with
+  `PATH="$(brew --prefix)/bin:$PATH" ansible-playbook …`. Targets need `rsync`
+  too (Ubuntu ships it).
 - Targets running Ubuntu 24.04 with SSH access as a sudo-capable user
 
 ---
