@@ -152,6 +152,14 @@ Declarative files (`SOUL/IDENTITY/AGENTS/HEARTBEAT`) always refresh; `USER.md`
 and `VISION.md` are seeded once so live customizations survive re-deploys (use
 `--vision` to overwrite the mission deliberately).
 
+> **Deploying to a real droplet?** Read
+> [`docs/deployment-notes.md`](docs/deployment-notes.md) first. It records the
+> actual fresh-droplet sequence — including the easy-to-miss **`openclaw` gateway
+> install** step that no playbook runs — plus the Ansible core 2.19 gotchas and the
+> `-e key="value with spaces"` truncation trap. For API keys resolved from Bitwarden
+> at gateway start (nothing written to `~/.openclaw/.env`), follow
+> [`docs/secrets-bws.md`](docs/secrets-bws.md).
+
 ---
 
 ## Authoring checklist
