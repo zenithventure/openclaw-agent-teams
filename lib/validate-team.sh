@@ -85,13 +85,14 @@ validate_team() {
     [[ ${#agent_dirs[@]} -ge 1 ]] || err "no agent directories under agents/"
 
     # openclaw.json must be valid JSON; pull ids + workspaces.
-    local json_ids=() json_ws=""
+    local json_ids=() json_ws="" json_ok=false
     if [[ -f "${dir}/openclaw.json" ]]; then
         if [[ "$have_node" == true ]]; then
             if ! node -e "JSON.parse(require('fs').readFileSync('${dir}/openclaw.json','utf8'))" 2>/dev/null; then
                 err "openclaw.json is not valid JSON"
             else
                 ok "openclaw.json is valid JSON"
+                json_ok=true
                 while IFS= read -r id; do [[ -n "$id" ]] && json_ids+=("$id"); done \
                     < <(node -e "const c=require('${dir}/openclaw.json');(c.agents?.list||[]).forEach(a=>console.log(a.id))")
                 json_ws="$(node -e "const c=require('${dir}/openclaw.json');(c.agents?.list||[]).forEach(a=>console.log((a.id||'')+'\t'+(a.workspace||'')))")"
@@ -104,28 +105,33 @@ validate_team() {
     generic=true; is_generic "$dir" || generic=false
 
     # 2. agents/<id> <-> openclaw.json ids (generic teams only) --------------
-    if [[ "$generic" == true && ${#json_ids[@]} -gt 0 ]]; then
-        local only_dirs="" only_json="" d id found
-        for d in "${agent_dirs[@]}"; do
-            found=false; for id in "${json_ids[@]}"; do [[ "$d" == "$id" ]] && found=true; done
-            [[ "$found" == false ]] && only_dirs+="${d} "
-        done
-        for id in "${json_ids[@]}"; do
-            found=false; for d in "${agent_dirs[@]}"; do [[ "$d" == "$id" ]] && found=true; done
-            [[ "$found" == false ]] && only_json+="${id} "
-        done
-        if [[ -n "$only_dirs" || -n "$only_json" ]]; then
-            err "agents/<id> ⇄ openclaw.json mismatch — dirs only: [${only_dirs:-none}], json only: [${only_json:-none}]"
+    if [[ "$generic" == true && "$json_ok" == true ]]; then
+        if [[ ${#json_ids[@]} -eq 0 ]]; then
+            err "openclaw.json registers zero agents (agents.list is empty or missing) — a team must register at least one"
         else
-            ok "agents/ dirs and openclaw.json ids match (${#json_ids[@]} agents)"
-        fi
-        # Workspace convention.
-        if [[ -n "$json_ws" ]]; then
+            local only_dirs="" only_json="" d id found
+            for d in "${agent_dirs[@]}"; do
+                found=false; for id in "${json_ids[@]}"; do [[ "$d" == "$id" ]] && found=true; done
+                [[ "$found" == false ]] && only_dirs+="${d} "
+            done
+            for id in "${json_ids[@]}"; do
+                found=false; for d in "${agent_dirs[@]}"; do [[ "$d" == "$id" ]] && found=true; done
+                [[ "$found" == false ]] && only_json+="${id} "
+            done
+            if [[ -n "$only_dirs" || -n "$only_json" ]]; then
+                err "agents/<id> ⇄ openclaw.json mismatch — dirs only: [${only_dirs:-none}], json only: [${only_json:-none}]"
+            else
+                ok "agents/ dirs and openclaw.json ids match (${#json_ids[@]} agents)"
+            fi
+            # Workspace: must be present on every agent, and follow the convention.
             local wid wws
             while IFS=$'\t' read -r wid wws; do
                 [[ -z "$wid" ]] && continue
-                [[ "$wws" == "~/.openclaw/workspace-${wid}" ]] || \
+                if [[ -z "$wws" ]]; then
+                    err "agent '${wid}' has no 'workspace' in openclaw.json"
+                elif [[ "$wws" != "~/.openclaw/workspace-${wid}" ]]; then
                     warn "agent '${wid}' workspace is '${wws}' (convention: ~/.openclaw/workspace-${wid})"
+                fi
             done <<< "$json_ws"
         fi
     elif [[ "$generic" == false ]]; then
