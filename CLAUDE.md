@@ -38,10 +38,11 @@ requirement. Author as many agents as the job needs.
       USER.md              # human-operator info (seed-once; survives re-deploys)
   shared/                  # team-wide context (copied verbatim into ~/.openclaw/shared)
     VISION.md              # mission, success criteria, constraints, priorities (MOST IMPORTANT)
-    STANDARDS.md           # canonical behavioral baseline — copy from _template, do not edit
-    BOOTSTRAP.md           # canonical first-run wizard — copy from _template, do not edit
     standup-log.md         # starts with a header; agents append entries
     skills/<name>/SKILL.md # OPTIONAL — team skills, installed into ~/.openclaw/skills
+    # STANDARDS.md and BOOTSTRAP.md are NOT vendored per team — the deployer
+    # supplies them from _template/shared (single source of truth). Ship your
+    # own copy only to override, and keep it byte-identical or the validator fails.
   env.template             # OPTIONAL — custom .env with extra provider/service keys
   README.md                # OPTIONAL but recommended — human-facing team overview
 ```
@@ -163,8 +164,9 @@ heading) are advisory. The manual checklist, for reference:
       Workflow + Safety.
 - [ ] `shared/VISION.md` filled in (mission, success criteria, constraints,
       priorities) — this is what every agent reads to judge its work.
-- [ ] `shared/STANDARDS.md` and `shared/BOOTSTRAP.md` copied unmodified from
-      `_template/`.
+- [ ] Do **not** vendor `shared/STANDARDS.md` or `shared/BOOTSTRAP.md` — the
+      deployer supplies them from `_template/`. (Ship an override only if you
+      must, and keep it byte-identical.)
 - [ ] `shared/standup-log.md` present.
 - [ ] Skills (if any) under `shared/skills/<name>/SKILL.md`.
 - [ ] Deploys cleanly to a temp dir:
@@ -175,7 +177,8 @@ heading) are advisory. The manual checklist, for reference:
 ## Don't
 
 - Don't hard-code a team allowlist anywhere — teams are discovered structurally.
-- Don't edit `shared/STANDARDS.md` or `shared/BOOTSTRAP.md` per team (canonical).
+- Don't vendor or edit `shared/STANDARDS.md` / `shared/BOOTSTRAP.md` per team —
+  they're canonical and supplied from `_template/shared` by the deployer.
 - Don't write a per-team deploy script unless the team genuinely needs bespoke
   logic (modernizer is the only current example).
 - Don't put real API keys in `env.template` or committed `host_vars` — keys are

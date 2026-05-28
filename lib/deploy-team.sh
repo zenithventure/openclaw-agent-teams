@@ -92,6 +92,24 @@ fi
 TEAM_NAME="$(basename "$TEAM_DIR")"
 OPENCLAW_DIR="${OPENCLAW_DIR:-$HOME/.openclaw}"
 
+# Canonical files (STANDARDS.md, BOOTSTRAP.md) live once in _template/shared and
+# are sourced from there unless a team ships its own override. _template sits
+# beside this script's repo (lib/../_template), and is present in every deploy
+# context (local checkout, the rsync'd repo on a target, the install-team clone).
+LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TEMPLATE_SHARED="$(cd "${LIB_DIR}/../_template/shared" 2>/dev/null && pwd || true)"
+
+# Echo the source path for a canonical shared file: the team's own copy if it
+# ships one, else the _template copy. Empty if neither exists.
+canonical_src() {
+    local f="$1"
+    if [[ -f "${TEAM_DIR}/shared/${f}" ]]; then
+        echo "${TEAM_DIR}/shared/${f}"
+    elif [[ -n "$TEMPLATE_SHARED" && -f "${TEMPLATE_SHARED}/${f}" ]]; then
+        echo "${TEMPLATE_SHARED}/${f}"
+    fi
+}
+
 # ── Discover agents, ids, and skills from the team data ────
 # Agent directories drive workspace deployment.
 AGENT_DIRS=()
@@ -301,7 +319,9 @@ deploy_shared_files() {
     local entry base
     for entry in "${TEAM_DIR}/shared"/*; do
         base="$(basename "$entry")"
-        [[ "$base" == "skills" || "$base" == "BOOTSTRAP.md" ]] && continue
+        # skills/ → ~/.openclaw/skills; STANDARDS.md/BOOTSTRAP.md are canonical
+        # and deployed from _template (below); both handled outside this loop.
+        [[ "$base" == "skills" || "$base" == "BOOTSTRAP.md" || "$base" == "STANDARDS.md" ]] && continue
         # VISION.md: seed-once so live mission edits survive re-deploys (the
         # operator owns it once seeded). Overwrite deliberately with --vision
         # (handled below) — not on every deploy.
@@ -319,12 +339,24 @@ deploy_shared_files() {
     done
     shopt -u dotglob nullglob
 
-    # BOOTSTRAP.md: drop only if neither the file nor the sentinel exists.
-    # The agent self-deletes it on first run; the sentinel prevents re-drop.
+    # STANDARDS.md: canonical, always refresh so updates propagate. Sourced from
+    # the team's own copy if it has one, else from _template (single source).
+    local standards_src; standards_src="$(canonical_src STANDARDS.md)"
+    if [[ -n "$standards_src" ]]; then
+        cp "$standards_src" "${OPENCLAW_DIR}/shared/STANDARDS.md"
+        log_ok "STANDARDS.md"
+    else
+        log_warn "STANDARDS.md not found (team or _template) — skipped"
+    fi
+
+    # BOOTSTRAP.md: canonical too, but seed-once. Drop only if neither the file
+    # nor the sentinel exists; the agent self-deletes it on first run and the
+    # sentinel prevents re-drop. Sourced from team copy, else _template.
     local sentinel="${OPENCLAW_DIR}/shared/.bootstrap-deployed"
-    if [[ -f "${TEAM_DIR}/shared/BOOTSTRAP.md" ]]; then
+    local bootstrap_src; bootstrap_src="$(canonical_src BOOTSTRAP.md)"
+    if [[ -n "$bootstrap_src" ]]; then
         if [[ ! -f "${OPENCLAW_DIR}/shared/BOOTSTRAP.md" && ! -f "${sentinel}" ]]; then
-            cp "${TEAM_DIR}/shared/BOOTSTRAP.md" "${OPENCLAW_DIR}/shared/BOOTSTRAP.md"
+            cp "$bootstrap_src" "${OPENCLAW_DIR}/shared/BOOTSTRAP.md"
             touch "${sentinel}"
             log_ok "BOOTSTRAP.md (first install)"
         else
