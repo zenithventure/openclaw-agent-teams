@@ -41,7 +41,7 @@ curl -fsSL https://openclaw.ai/install.sh | bash
 
 The installer runs onboarding automatically — you'll choose your messaging channel, enter your Telegram/Discord token, API key, etc.
 
-> **Choosing your model.** Onboarding is also where you pick the **AI provider and model** — the model choice is entirely yours (Claude, OpenRouter, OpenAI, a local model, etc.); nothing here requires a particular one. To see what you ended up on, check `model.primary` in `~/.openclaw/openclaw.json` or the `[gateway] agent model: …` line in `openclaw gateway logs`. To change it later, edit `model.primary` in `~/.openclaw/openclaw.json` (and make sure the matching provider key is set), then restart the gateway.
+> **Choosing your model.** Onboarding is also where you pick the **AI provider and model** — the model choice is entirely yours (Claude, OpenRouter, OpenAI, a local model, etc.); nothing here requires a particular one. To see what you ended up on, check `agents.defaults.model.primary` in `~/.openclaw/openclaw.json` or the `[gateway] agent model: …` line in `openclaw logs`. To change it later, edit `agents.defaults.model.primary` in `~/.openclaw/openclaw.json` (and make sure the matching provider key is set), then restart the gateway.
 
 #### Step 3 — Deploy team (still as openclaw user)
 
@@ -124,7 +124,7 @@ sudo -u openclaw nano /home/openclaw/.openclaw/shared/VISION.md
 ```bash
 sudo -u openclaw -i openclaw gateway status
 sudo -u openclaw -i openclaw gateway restart
-sudo -u openclaw -i openclaw gateway logs
+sudo -u openclaw -i openclaw logs
 ```
 
 ## Security
@@ -145,7 +145,7 @@ All three steps are safe to run multiple times. Users are checked before creatio
 ### Gateway isn't responding
 ```bash
 sudo -u openclaw -i openclaw gateway status
-sudo -u openclaw -i openclaw gateway logs
+sudo -u openclaw -i openclaw logs
 ```
 
 ### Can't SSH as admin user
