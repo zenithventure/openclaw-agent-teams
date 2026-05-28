@@ -29,7 +29,9 @@
     # ── Phase 1: Hardening ───────────────────────────────────
     - name: Wait for any running apt/dpkg locks
       ansible.builtin.shell: |
-        while fuser /var/lib/dpkg/lock-frontend &>/dev/null 2>&1; do sleep 5; done
+        while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do sleep 5; done
+      args:
+        executable: /bin/bash
       changed_when: false
 
     - name: Install system packages
@@ -66,6 +68,15 @@
         user: "{{ admin_user }}"
         key: "{{ ssh_key }}"
       when: ssh_key | length > 0
+
+    - name: Ensure admin user's .ssh dir exists (fallback copy target)
+      ansible.builtin.file:
+        path: "/home/{{ admin_user }}/.ssh"
+        state: directory
+        mode: '0700'
+        owner: "{{ admin_user }}"
+        group: "{{ admin_user }}"
+      when: ssh_key | length == 0
 
     - name: Copy root's authorized_keys to admin user (DO-injected fallback)
       ansible.builtin.copy:
@@ -112,6 +123,7 @@
           echo '/swapfile none swap sw 0 0' >> /etc/fstab
         fi
       args:
+        executable: /bin/bash
         creates: /swapfile
 
     # ── Phase 2: OpenClaw prep ───────────────────────────────
@@ -153,6 +165,7 @@
         apt-get update -qq
         apt-get install -y -qq nodejs
       args:
+        executable: /bin/bash
         creates: /usr/bin/node
 
     # ── Phase 3: Caddy reverse proxy ─────────────────────────
@@ -166,6 +179,7 @@
         apt-get update -qq
         apt-get install -y -qq caddy
       args:
+        executable: /bin/bash
         creates: /usr/bin/caddy
 
     - name: Write Caddyfile (domain mode — Let's Encrypt)
