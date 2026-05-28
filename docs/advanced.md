@@ -39,44 +39,70 @@ startup through the `exec` provider rather than being written to disk.
 - You're running multiple droplets and want a single rotation point.
 - You need an audit log of which key was read when.
 
-### Sketch
+This repo ships the resolver: [`lib/openclaw-bws-resolver.mjs`](../lib/openclaw-bws-resolver.mjs).
+Each agent developer brings their **own** BWS project + access token; the secret-id
+naming convention below is shared so every deployment's `openclaw.json` looks the same.
 
-1. Create a Bitwarden Secrets Manager organization and project, generate an access
-   token, and note its ID.
-2. Store the token at `~/.config/openclaw/bws.env` (mode `600`):
+#### 1. Store your keys in BWS (per developer)
 
-   ```env
-   BWS_ACCESS_TOKEN=…
-   BWS_PROJECT_ID=…
-   ```
+Create a Bitwarden Secrets Manager organization + project and a machine-account
+access token. Store each credential as a secret whose **key** follows this
+convention (the resolver matches on the secret's `key` field):
 
-3. Install a small `bws-resolver` helper on the droplet (path:
-   `~/.local/bin/openclaw-bws-resolver`) that takes a secret ID and prints its
-   value.
-4. Add an `EnvironmentFile=` line to the user systemd unit so the token is loaded
-   at gateway start:
+| Credential | BWS secret key |
+|------------|----------------|
+| Model provider API key | `openclaw/providers/<provider>/apiKey` (e.g. `.../openrouter/apiKey`) |
+| Channel bot token | `openclaw/channels/<channel>/botToken` (e.g. `.../telegram/botToken`) |
 
-   ```ini
-   [Service]
-   EnvironmentFile=%h/.config/openclaw/bws.env
-   ```
+#### 2. Install the resolver + token on the droplet
 
-5. In `~/.openclaw/openclaw.json`, replace literal keys with `exec` refs:
+```bash
+install -m 0755 lib/openclaw-bws-resolver.mjs /usr/local/bin/openclaw-bws-resolver.mjs
+install -d -m 0700 ~/.config/openclaw
+printf 'BWS_ACCESS_TOKEN=%s\n' "$YOUR_TOKEN" > ~/.config/openclaw/bws.env   # mode 600
+chmod 600 ~/.config/openclaw/bws.env
+```
 
-   ```json
-   "credentials": {
-     "ANTHROPIC_API_KEY": {
-       "source": "exec",
-       "provider": "bws",
-       "id": "ANTHROPIC_API_KEY"
-     }
-   }
-   ```
+Add an `EnvironmentFile=` to the gateway's user systemd unit so the token (the
+one secret that lives on disk) loads at start:
 
-The full Ansible implementation — including the resolver script and the
-provider definition — lives in
-`~/git/DigitalOcean_setup/openclaw/openclaw-secrets.yml`. This repo intentionally
-does not ship a resolver yet; lift it from the playbook when you need it.
+```ini
+[Service]
+EnvironmentFile=%h/.config/openclaw/bws.env
+```
+
+#### 3. Declare the provider + SecretRefs in `openclaw.json`
+
+```json5
+{
+  secrets: { providers: { bws: {
+    source: "exec",
+    command: "/usr/local/bin/openclaw-bws-resolver.mjs",
+    passEnv: ["BWS_ACCESS_TOKEN", "PATH", "BWS_BIN", "BWS_PROJECT_ID"],
+    jsonOnly: true,
+  } } },
+  models: { providers: { openrouter: {
+    apiKey: { source: "exec", provider: "bws", id: "openclaw/providers/openrouter/apiKey" },
+  } } },
+  channels: { telegram: {
+    enabled: true,
+    botToken: { source: "exec", provider: "bws", id: "openclaw/channels/telegram/botToken" },
+  } },
+}
+```
+
+At gateway start every SecretRef is resolved (the gateway batches all ids into
+one resolver call); resolution failure keeps the previous working snapshot.
+`openclaw secrets reload` re-resolves without a restart. The resolver's I/O
+contract (stdin `{ids:[…]}` → stdout `{values:{…}}`) and which fields accept a
+SecretRef are documented at
+<https://docs.openclaw.ai/gateway/secrets> and
+<https://docs.openclaw.ai/reference/secretref-credential-surface>.
+
+The resolver reads `BWS_ACCESS_TOKEN` (required), `BWS_BIN` (default `bws`), and
+optional `BWS_PROJECT_ID` to scope the listing. It runs `bws secret list` once
+and maps each requested id to the matching secret `key` — no key value is ever
+written to disk.
 
 ---
 
