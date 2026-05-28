@@ -157,22 +157,29 @@
         mode: '0700'
 
     # ── Deploy the team (delegates to lib/deploy-team.sh) ──────────
+    # vision_arg holds the optional `--vision <shell-quoted>` for the deployer,
+    # built here in pure Jinja so the shell block below stays free of inline
+    # {% %} blocks and prose comments — both are parsed by Ansible's split_args
+    # and were the source of past quote/apostrophe load-time failures. Set only
+    # for an inline `vision`; a vision_file is copied over VISION.md post-deploy.
+    - name: Build the optional --vision argument
+      ansible.builtin.set_fact:
+        vision_arg: >-
+          {{ ('--vision ' ~ (vision | quote))
+             if (vision is defined and (vision | length > 0)
+                 and (vision_file is not defined or (vision_file | length == 0)))
+             else '' }}
+
+    # Prefer the team setup.sh (a thin shim for built-in teams; bespoke for
+    # modernizer); pure-data teams fall back to the deployer. Mirrors install-team.sh.
     - name: Deploy {{ team }}
       ansible.builtin.shell: |
         set -euo pipefail
         TEAM_DIR="{{ repo_remote }}/{{ team }}"
-        EXTRA=()
-        {% if (vision is defined) and (vision | length > 0) and ((vision_file is not defined) or (vision_file | length == 0)) %}
-        EXTRA+=(--vision {{ vision | quote }})
-        {% endif %}
-        # Prefer the team setup.sh when present — for built-in teams
-        # this is a thin shim over the generic deployer, but a team may
-        # ship bespoke logic (e.g. modernizer). Pure-data teams fall
-        # back to the deployer directly. Mirrors install-team.sh.
         if [[ -f "${TEAM_DIR}/setup.sh" ]]; then
-          bash "${TEAM_DIR}/setup.sh" "${EXTRA[@]+"${EXTRA[@]}"}"
+          bash "${TEAM_DIR}/setup.sh" {{ vision_arg }}
         else
-          bash "{{ repo_remote }}/lib/deploy-team.sh" --team-dir "${TEAM_DIR}" "${EXTRA[@]+"${EXTRA[@]}"}"
+          bash "{{ repo_remote }}/lib/deploy-team.sh" --team-dir "${TEAM_DIR}" {{ vision_arg }}
         fi
       args:
         executable: /bin/bash
