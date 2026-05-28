@@ -145,7 +145,17 @@ and `VISION.md` are seeded once so live customizations survive re-deploys (use
 
 ## Authoring checklist
 
-Before considering a team done:
+Run the validator — it mechanizes everything below and CI runs it on every PR:
+
+```bash
+bash lib/validate-team.sh --team-dir <team-name>   # one team
+bash lib/validate-team.sh --all --deploy            # every team + deploy smoke test
+```
+
+Errors fail the build (invalid JSON, `agents/<id>` ⇄ `openclaw.json` id mismatch,
+missing required files, missing `> **Baseline:**` line, canonical files edited,
+`setup.sh` syntax). Warnings (e.g. a missing `## Core Workflow`/`## Safety`
+heading) are advisory. The manual checklist, for reference:
 
 - [ ] `openclaw.json` exists; every `agents/<id>/` has a matching `id` + `workspace`.
 - [ ] 1+ agents; each has IDENTITY, SOUL, AGENTS, HEARTBEAT, USER.

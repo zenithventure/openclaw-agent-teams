@@ -1,0 +1,60 @@
+name: Validate teams
+
+# Mechanizes the CLAUDE.md authoring checklist + a deploy smoke test on every
+# push / PR, so a broken team or playbook is caught here instead of at deploy
+# time. See lib/validate-team.sh and issues #41 / #42.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  validate-teams:
+    name: Team data + deploy smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Validate every team (structure, contract, canonical files, deploy)
+        run: bash lib/validate-team.sh --all --deploy
+
+      - name: Syntax-check shell scripts
+        run: |
+          set -e
+          shopt -s nullglob
+          for f in lib/*.sh */setup.sh bootstrap.sh install-team.sh; do
+            echo "bash -n $f"
+            bash -n "$f"
+          done
+
+  validate-ansible:
+    name: Ansible playbook syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # A recent ansible-core matters: the playbooks' `shell:` blocks are
+      # parsed by split_args at load time, which is where stray quotes /
+      # unbalanced jinja surface (see #42). Older cores were more lenient.
+      - name: Install Ansible + collections
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible-core
+          ansible-galaxy collection install ansible.posix community.general
+
+      - name: Syntax-check playbooks
+        run: |
+          set -e
+          ansible-playbook -i ansible/inventory/production ansible/bootstrap.yml --syntax-check
+          ansible-playbook -i ansible/inventory/production ansible/openclaw-team.yml --syntax-check
