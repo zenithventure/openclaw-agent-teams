@@ -33,6 +33,11 @@ jobs:
             bash -n "$f"
           done
 
+      - name: ShellCheck shell scripts (error severity)
+        run: |
+          shopt -s nullglob
+          shellcheck -S error lib/*.sh */setup.sh bootstrap.sh install-team.sh
+
   validate-ansible:
     name: Ansible playbook syntax
     runs-on: ubuntu-latest
@@ -50,8 +55,8 @@ jobs:
       - name: Install Ansible + collections
         run: |
           python -m pip install --upgrade pip
-          pip install ansible-core
-          ansible-galaxy collection install ansible.posix community.general
+          pip install 'ansible-core>=2.20,<2.21'
+          ansible-galaxy collection install -r ansible/requirements.yml
 
       - name: Syntax-check playbooks
         run: |

@@ -1,0 +1,10 @@
+---
+# Ansible collection dependencies for the deploy playbooks.
+# Install with:  ansible-galaxy collection install -r ansible/requirements.yml
+collections:
+  # synchronize (repo rsync to targets) in openclaw-team.yml
+  - name: ansible.posix
+    version: ">=1.5.0"
+  # ufw (firewall) in bootstrap.yml
+  - name: community.general
+    version: ">=8.0.0"
