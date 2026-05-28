@@ -57,12 +57,11 @@
     - name: Fail if team is not structurally deployable
       ansible.builtin.assert:
         that:
-          - team_stat.results[0].stat.exists and (team_stat.results[0].stat.isreg | default(false))
           - team_stat.results[1].stat.exists and (team_stat.results[1].stat.isdir | default(false))
         fail_msg: >-
-          `{{ team }}` is not a deployable team — expected both
-          {{ repo_local }}/{{ team }}/openclaw.json (file) and
-          {{ repo_local }}/{{ team }}/agents/ (dir).
+          `{{ team }}` is not a deployable team — expected
+          {{ repo_local }}/{{ team }}/agents/ (dir). openclaw.json is optional
+          (the deployer synthesizes one from agents/ when absent).
 
     # A team is "generic" iff it deploys via lib/deploy-team.sh — either it has
     # no setup.sh (pure data) or its setup.sh is the thin shim that forwards to
@@ -90,10 +89,12 @@
         (vision is defined and (vision | length > 0))
         or (vision_file is defined and (vision_file | length > 0))
 
-    # Structural sanity (generic teams only): the deployer maps
-    # agents/<id>/ ⇄ openclaw.json agent id. A dir without a matching id is
-    # never registered; an id without a dir registers an agent with no
-    # workspace files. Catch both on the controller before we touch any host.
+    # Structural sanity (generic teams that ship an openclaw.json): the deployer
+    # maps agents/<id>/ ⇄ openclaw.json agent id. A dir without a matching id is
+    # never registered; an id without a dir registers an agent with no workspace
+    # files. Catch both on the controller before we touch any host. Teams that
+    # omit openclaw.json get it synthesized from agents/ (ids = dir names), so
+    # there's nothing to cross-check.
     - name: List agent directories on the controller
       ansible.builtin.find:
         paths: "{{ repo_local }}/{{ team }}/agents"
@@ -122,7 +123,7 @@
         openclaw_agent_ids: >-
           {{ (lookup('file', repo_local ~ '/' ~ team ~ '/openclaw.json') | from_json).agents.list
              | map(attribute='id') | list }}
-      when: team_is_generic | bool
+      when: team_is_generic | bool and team_stat.results[0].stat.exists
 
   tasks:
     # ── Push the current repo to the target ────────────────────────

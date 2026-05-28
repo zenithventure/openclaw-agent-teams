@@ -73,8 +73,9 @@ validate_team() {
     echo -e "\n${BOLD}▶ ${name}${NC} ${DIM}(${dir})${NC}"
 
     # 1. Structural ----------------------------------------------------------
-    [[ -f "${dir}/openclaw.json" ]] || err "missing openclaw.json"
-    [[ -d "${dir}/agents" ]]        || err "missing agents/ directory"
+    # agents/ is required; openclaw.json is optional (the deployer synthesizes
+    # one from agents/ for uniform teams).
+    [[ -d "${dir}/agents" ]] || err "missing agents/ directory"
 
     # Collect agent dirs.
     local agent_dirs=()
@@ -84,9 +85,12 @@ validate_team() {
     fi
     [[ ${#agent_dirs[@]} -ge 1 ]] || err "no agent directories under agents/"
 
-    # openclaw.json must be valid JSON; pull ids + workspaces.
-    local json_ids=() json_ws="" json_ok=false
+    # openclaw.json: if present, must be valid JSON; pull ids + workspaces. If
+    # absent, the deployer synthesizes it from agents/ (ids = dir names), so
+    # there's nothing to mismatch. has_json = file present; json_ok = parsed OK.
+    local json_ids=() json_ws="" has_json=false json_ok=false
     if [[ -f "${dir}/openclaw.json" ]]; then
+        has_json=true
         if [[ "$have_node" == true ]]; then
             if ! node -e "JSON.parse(require('fs').readFileSync('${dir}/openclaw.json','utf8'))" 2>/dev/null; then
                 err "openclaw.json is not valid JSON"
@@ -100,12 +104,15 @@ validate_team() {
         else
             warn "node not found — skipping JSON-level checks"
         fi
+    else
+        ok "openclaw.json omitted — deployer synthesizes it from agents/ (ids = dir names)"
+        json_ids=("${agent_dirs[@]}")
     fi
 
     generic=true; is_generic "$dir" || generic=false
 
-    # 2. agents/<id> <-> openclaw.json ids (generic teams only) --------------
-    if [[ "$generic" == true && "$json_ok" == true ]]; then
+    # 2. agents/<id> ⇄ openclaw.json ids (generic teams that ship a json) ----
+    if [[ "$generic" == true && "$has_json" == true && "$json_ok" == true ]]; then
         if [[ ${#json_ids[@]} -eq 0 ]]; then
             err "openclaw.json registers zero agents (agents.list is empty or missing) — a team must register at least one"
         else
@@ -227,7 +234,7 @@ validate_team() {
 discover_teams() {
     local d
     for d in "${REPO_ROOT}"/*/; do
-        [[ -f "${d}openclaw.json" && -d "${d}agents" ]] && echo "${d%/}"
+        [[ -d "${d}agents" ]] && echo "${d%/}"
     done
 }
 
