@@ -148,6 +148,9 @@
           - "--exclude=node_modules"
           - "--exclude=.env"
           - "--exclude=*.backup.*"
+          - "--exclude=ansible/secrets"
+          - "--exclude=*.vault.yml"
+          - "--exclude=.claude"
           - "--chown={{ openclaw_user }}:{{ openclaw_user }}"
 
     - name: Ensure ~/.openclaw exists

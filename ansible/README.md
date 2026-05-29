@@ -8,6 +8,11 @@ If you're deploying a single droplet, **use the shell flow** — open
 [DO-SETUP.md](../DO-SETUP.md). If you're deploying many hosts, or you
 want declarative inventory + per-host overrides, use these playbooks.
 
+> **Before a real run, read [`../docs/deployment-notes.md`](../docs/deployment-notes.md)** —
+> the fresh-droplet sequence (incl. the separate `openclaw` gateway install), Ansible
+> core 2.19 gotchas, and the `-e key="value with spaces"` truncation trap. For secrets
+> resolved from Bitwarden at gateway start, see [`../docs/secrets-bws.md`](../docs/secrets-bws.md).
+
 ---
 
 ## Requirements

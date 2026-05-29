@@ -73,10 +73,18 @@ startup through the `exec` provider rather than being written to disk.
    }
    ```
 
-The full Ansible implementation — including the resolver script and the
-provider definition — lives in
-`~/git/DigitalOcean_setup/openclaw/openclaw-secrets.yml`. This repo intentionally
-does not ship a resolver yet; lift it from the playbook when you need it.
+> **A complete, validated recipe now lives in this repo:**
+> [`docs/secrets-bws.md`](secrets-bws.md) walks the whole flow for OpenClaw 2026.5.x —
+> the exec-provider stdio contract, the exact `openclaw config set` commands, the
+> systemd `EnvironmentFile`, and getting the `bws` CLI onto the droplet. The resolver
+> script it references is shipped at
+> [`ansible/files/openclaw-bws-secret-provider.sh`](../ansible/files/openclaw-bws-secret-provider.sh)
+> (resolves secrets by key name; safe under the near-empty env OpenClaw spawns providers in).
+> Note the sketch below predates that recipe and uses an older `credentials` shape;
+> prefer the secrets-bws.md `secrets.providers` + `--ref` mechanism.
+
+A fuller Ansible implementation also lives in the sister repo
+`~/git/DigitalOcean_setup/openclaw/openclaw-secrets.yml` if you want to compare.
 
 ---
 
