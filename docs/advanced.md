@@ -104,6 +104,19 @@ optional `BWS_PROJECT_ID` to scope the listing. It runs `bws secret list` once
 and maps each requested id to the matching secret `key` — no key value is ever
 written to disk.
 
+> **See also:** [`docs/secrets-bws.md`](secrets-bws.md) is a parallel, fully
+> validated walkthrough of this same `secrets.providers` + SecretRef flow for
+> OpenClaw 2026.5.x — the exec-provider stdio contract, the exact
+> `openclaw config set` commands, the systemd `EnvironmentFile`, and getting the
+> `bws` CLI onto the droplet. It ships an Ansible-oriented shell resolver at
+> [`ansible/files/openclaw-bws-secret-provider.sh`](../ansible/files/openclaw-bws-secret-provider.sh)
+> as an alternative to the `lib/openclaw-bws-resolver.mjs` script above; both
+> resolve secrets by key name and are safe under the near-empty env OpenClaw
+> spawns providers in.
+
+A fuller Ansible implementation also lives in the sister repo
+`~/git/DigitalOcean_setup/openclaw/openclaw-secrets.yml` if you want to compare.
+
 ---
 
 ## 2. Periodic state backup to GitHub
